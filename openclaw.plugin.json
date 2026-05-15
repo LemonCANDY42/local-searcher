@@ -1,0 +1,77 @@
+{
+  "id": "local-searcher",
+  "name": "Local Searcher",
+  "description": "Local-first SearXNG search + reranking + research pipelines for AI agents. Framework-agnostic.",
+  "version": "0.3.0",
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "searxngBaseUrl": {
+        "type": "string",
+        "default": "http://127.0.0.1:8888"
+      },
+      "ntfyBaseUrl": {
+        "type": "string",
+        "default": "http://127.0.0.1:18082"
+      },
+      "serviceRoot": {
+        "type": "string"
+      },
+      "runsDir": {
+        "type": "string"
+      },
+      "extractRoot": {
+        "type": "string"
+      },
+      "defaultLanguage": {
+        "type": "string",
+        "default": "en-US"
+      },
+      "defaultLimit": {
+        "type": "number",
+        "minimum": 1,
+        "maximum": 20,
+        "default": 8
+      },
+      "fetchTimeoutMs": {
+        "type": "number",
+        "minimum": 1000,
+        "default": 20000
+      },
+      "browserTimeoutMs": {
+        "type": "number",
+        "minimum": 1000,
+        "default": 45000
+      },
+      "maxTextChars": {
+        "type": "number",
+        "minimum": 1000,
+        "default": 12000
+      },
+      "maxLinks": {
+        "type": "number",
+        "minimum": 1,
+        "maximum": 100,
+        "default": 24
+      },
+      "rerankEnabled": {
+        "type": "boolean",
+        "default": true
+      },
+      "defaultMode": {
+        "type": "string",
+        "enum": ["auto", "general", "official-docs", "github", "models", "packages"],
+        "default": "auto"
+      },
+      "defaultRerankVersion": {
+        "type": "string",
+        "enum": ["v1.0", "v1.1", "v1.2", "v1.3", "v1.4", "v1.5", "v2.0"],
+        "default": "v1.4"
+      },
+      "embeddingModelPath": {
+        "type": "string"
+      }
+    }
+  }
+}

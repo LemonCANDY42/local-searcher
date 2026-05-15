@@ -1,0 +1,120 @@
+general:
+  debug: false
+  instance_name: "SearXNG (Clio)"
+  donation_url: false
+  contact_url: false
+  privacypolicy_url: false
+  enable_metrics: false
+
+brand: {}
+
+search:
+  safe_search: 1
+  autocomplete: ""
+  favicon_resolver: ""
+  default_lang: "en-US"
+  formats:
+    - html
+    - json
+
+server:
+  method: "GET"
+
+ui:
+  default_theme: simple
+  query_in_title: false
+  center_alignment: false
+  default_locale: ""
+  theme_args:
+    simple_style: auto
+
+outgoing:
+  request_timeout: 4.0
+  enable_http2: true
+  useragent_suffix: ""
+
+plugins:
+  searx.plugins.hash_plugin.SXNGPlugin:
+    active: true
+  searx.plugins.self_info.SXNGPlugin:
+    active: true
+  searx.plugins.tracker_url_remover.SXNGPlugin:
+    active: true
+
+engines:
+  - name: wikipedia
+    engine: wikipedia
+    shortcut: wp
+    display_type: ["infobox"]
+    categories: [general]
+
+  - name: wikidata
+    engine: wikidata
+    shortcut: wd
+    timeout: 3.0
+    weight: 2
+    display_type: ["infobox"]
+    categories: [general]
+
+  - name: google
+    engine: google
+    shortcut: go
+    categories: [general]
+    weight: 4
+
+  - name: duckduckgo
+    engine: duckduckgo
+    shortcut: ddg
+    categories: [general]
+    weight: 1
+
+  - name: bing
+    engine: bing
+    shortcut: bi
+    categories: [general]
+    weight: 1
+
+  - name: google news
+    engine: google_news
+    categories: [news]
+    shortcut: gon
+    weight: 4
+
+  - name: duckduckgo news
+    engine: duckduckgo_extra
+    categories: [news]
+    ddg_category: news
+    shortcut: ddn
+    weight: 1
+
+  - name: bing news
+    engine: bing_news
+    categories: [news]
+    shortcut: bin
+    weight: 1
+
+  - name: qwant news
+    qwant_categ: news
+    engine: qwant
+    shortcut: qwn
+    categories: [news]
+    weight: 2
+
+  - name: yahoo news
+    engine: yahoo_news
+    shortcut: yhn
+    categories: [news]
+    weight: 1
+
+  - name: mojeek news
+    shortcut: mjknews
+    engine: mojeek
+    categories: [news, web]
+    search_type: news
+    paging: false
+    weight: 1
+
+  - name: github
+    engine: github
+    shortcut: gh
+    categories: [it, repos]

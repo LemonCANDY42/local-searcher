@@ -1,0 +1,41 @@
+services:
+  valkey:
+    image: valkey/valkey:8-alpine
+    container_name: local-searcher-valkey
+    command: valkey-server --save 60 1 --loglevel warning
+    restart: unless-stopped
+    volumes:
+      - ${SEARCH_INFO_HOME}/searxng-valkey:/data
+
+  searxng:
+    image: searxng/searxng:latest
+    container_name: local-searcher-searxng
+    restart: unless-stopped
+    depends_on:
+      - valkey
+    ports:
+      - "127.0.0.1:${SEARXNG_PORT}:8080"
+    volumes:
+      - ./searxng:/etc/searxng:rw
+      - ${SEARCH_INFO_HOME}/searxng-cache:/var/cache/searxng
+    environment:
+      SEARXNG_BASE_URL: "http://127.0.0.1:${SEARXNG_PORT}/"
+      SEARXNG_BIND_ADDRESS: "0.0.0.0"
+      SEARXNG_PORT: "8080"
+      SEARXNG_SECRET: "${SEARXNG_SECRET}"
+      SEARXNG_LIMITER: "false"
+      SEARXNG_PUBLIC_INSTANCE: "false"
+      SEARXNG_IMAGE_PROXY: "false"
+      SEARXNG_VALKEY_URL: "valkey://valkey:6379/0"
+
+  ntfy:
+    image: binwiederhier/ntfy:latest
+    container_name: local-searcher-ntfy
+    restart: unless-stopped
+    command: ["serve", "--config", "/etc/ntfy/server.yml"]
+    ports:
+      - "127.0.0.1:${NTFY_PORT}:80"
+    volumes:
+      - ./ntfy/server.yml:/etc/ntfy/server.yml:ro
+      - ${SEARCH_INFO_HOME}/ntfy-cache:/var/cache/ntfy
+      - ${SEARCH_INFO_HOME}/ntfy-data:/var/lib/ntfy

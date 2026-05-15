@@ -1,0 +1,29 @@
+{
+  "name": "local-searcher",
+  "version": "0.3.0",
+  "description": "Local-first SearXNG search + reranking + research pipelines for AI agents. Framework-agnostic.",
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/LemonCANDY42/local-searcher"
+  },
+  "keywords": [
+    "searxng",
+    "search",
+    "reranking",
+    "ai-agent",
+    "openclaw",
+    "mcp",
+    "local-first",
+    "research-pipeline"
+  ],
+  "openclaw": {
+    "extensions": ["./src/index.ts"],
+    "runtimeExtensions": ["./dist/index.js"],
+    "compat": {
+      "pluginApi": ">=2026.3.24-beta.2",
+      "minGatewayVersion": "2026.3.24-beta.2"
+    }
+  }
+}
