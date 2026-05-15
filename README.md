@@ -1,298 +1,304 @@
 <p align="center">
-  <h1 align="center">🔍 local-searcher</h1>
-  <p align="center">
-    <strong>Local-first search + reranking + research pipelines for AI agents</strong>
-  </p>
-  <p align="center">
-    <a href="#quickstart">Quickstart</a> · <a href="#features">Features</a> · <a href="#integration">Integration</a> · <a href="#api">API</a> · <a href="#contributing">Contributing</a>
-  </p>
+  <img src="https://img.shields.io/badge/🔍-local--searcher-blueviolet?style=for-the-badge&labelColor=0d1117&color=58a6ff" alt="local-searcher">
+</p>
+
+<h1 align="center">local-searcher</h1>
+
+<p align="center">
+  <strong>让 AI Agent 拥有本地搜索超能力</strong><br>
+  <em>Local-first search + reranking + research pipelines for AI agents</em>
 </p>
 
 <p align="center">
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="License"></a>
-  <a href="https://github.com/LemonCANDY42/local-searcher/issues"><img src="https://img.shields.io/github/issues/LemonCANDY42/local-searcher" alt="Issues"></a>
-  <a href="https://github.com/LemonCANDY42/local-searcher/stargazers"><img src="https://img.shields.io/github/stars/LemonCANDY42/local-searcher" alt="Stars"></a>
+  <a href="https://github.com/LemonCANDY42/local-searcher/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-00d56b?style=flat-square&labelColor=0d1117" alt="License"></a>
+  <a href="https://github.com/LemonCANDY42/local-searcher/stargazers"><img src="https://img.shields.io/github/stars/LemonCANDY42/local-searcher?style=flat-square&labelColor=0d1117&color=ffd700" alt="Stars"></a>
+  <a href="https://github.com/LemonCANDY42/local-searcher/issues"><img src="https://img.shields.io/github/issues/LemonCANDY42/local-searcher?style=flat-square&labelColor=0d1117&color=ff6b6b" alt="Issues"></a>
+  <a href="https://github.com/LemonCANDY42/local-searcher/network/members"><img src="https://img.shields.io/github/forks/LemonCANDY42/local-searcher?style=flat-square&labelColor=0d1117&color=8b949e" alt="Forks"></a>
+</p>
+
+<p align="center">
+  <a href="#quickstart">Quickstart</a> · <a href="#features">Features</a> · <a href="#为什么选择-local-searcher">Why</a> · <a href="#integration">Integration</a> · <a href="#api">API</a> · <a href="#architecture">Architecture</a>
 </p>
 
 ---
 
-**local-searcher** is a self-hosted, key-free search infrastructure for AI agents. It aggregates results from Google, Bing, DuckDuckGo, and Qwant via [SearXNG](https://docs.searxng.org/), applies multi-version reranking, and provides checkpointed research runs — all running on your machine.
+## 🧠 这是什么
 
-> **Zero API keys. Zero data leaves your network. Unlimited queries.**
+**local-searcher** 是一个为 AI Agent 打造的本地搜索基础设施。
 
-## Why local-searcher?
+它不是又一个搜索 wrapper。它是你 Agent 的**搜索后端**——聚合 Google、Bing、DuckDuckGo、Qwant 四大引擎，内置 7 级 reranking 流水线，支持断点续传式深度研究，所有数据永不出本机。
 
-| | local-searcher | Brave Search API | Google CSE API |
-|---|---|---|---|
-| **Cost** | ✅ Free forever | Free 2K/mo, then $3/1K | Free 100/day |
-| **Multi-engine** | ✅ Google + Bing + DDG + Qwant | ❌ Brave only | ❌ Google only |
-| **Privacy** | ✅ Queries stay local | ❌ Sent to Brave | ❌ Sent to Google |
-| **API Key** | ✅ Not needed | ❌ Required | ❌ Required |
-| **Reranking** | ✅ 7 versions (v1.0–v2.0) | ❌ None | ❌ None |
-| **Research runs** | ✅ Checkpointed + resumable | ❌ None | ❌ None |
+> **Zero API keys. Zero data leaks. Unlimited queries. Your machine, your rules.**
 
-## Quickstart
+```bash
+# 一行启动，Agent 即刻拥有搜索能力
+docker run -d -p 8888:8080 searxng/searxng
+```
 
-### 1. Start SearXNG
+## 🤔 为什么选择 local-searcher
+
+<table>
+<tr>
+  <th></th>
+  <th>local-searcher</th>
+  <th>Brave API</th>
+  <th>Google CSE</th>
+  <th>DuckDuckGo</th>
+</tr>
+<tr>
+  <td>💰 <b>费用</b></td>
+  <td>✅ 永久免费</td>
+  <td>2K/月后 $3/千次</td>
+  <td>100次/天</td>
+  <td>免费但限速</td>
+</tr>
+<tr>
+  <td>🌐 <b>多引擎聚合</b></td>
+  <td>✅ 4 引擎同时搜</td>
+  <td>❌ 仅 Brave</td>
+  <td>❌ 仅 Google</td>
+  <td>❌ 仅 DDG</td>
+</tr>
+<tr>
+  <td>🔒 <b>隐私</b></td>
+  <td>✅ 数据不出本机</td>
+  <td>❌ 发送到 Brave</td>
+  <td>❌ 发送到 Google</td>
+  <td>⚠️ 有限</td>
+</tr>
+<tr>
+  <td>🔑 <b>API Key</b></td>
+  <td>✅ 不需要</td>
+  <td>❌ 必需</td>
+  <td>❌ 必需</td>
+  <td>✅ 不需要</td>
+</tr>
+<tr>
+  <td>📊 <b>Reranking</b></td>
+  <td>✅ 7 个版本渐进优化</td>
+  <td>❌</td>
+  <td>❌</td>
+  <td>❌</td>
+</tr>
+<tr>
+  <td>📝 <b>研究流水线</b></td>
+  <td>✅ 断点续传</td>
+  <td>❌</td>
+  <td>❌</td>
+  <td>❌</td>
+</tr>
+</table>
+
+**一句话：免费、无限、隐私、多引擎、带 rerank——这个组合，官方 API 给不了。**
+
+---
+
+## ⚡ Quickstart
+
+### 1️⃣ 启动 SearXNG
 
 ```bash
 docker run -d --name searxng -p 8888:8080 searxng/searxng
 ```
 
-### 2. Install the plugin (OpenClaw)
+### 2️⃣ 安装插件
+
+**OpenClaw 用户：**
 
 ```bash
 openclaw plugins install clawhub:local-searcher
-```
-
-Or copy `src/` into your OpenClaw extensions directory:
-
-```bash
-cp -r src/ ~/.openclaw/workspace/.openclaw/extensions/local-searcher/
-```
-
-### 3. Enable and configure
-
-```bash
 openclaw config set plugins.entries.local-searcher.enabled true
 openclaw config set plugins.entries.local-searcher.config.searxngBaseUrl "http://127.0.0.1:8888"
 openclaw gateway restart
 ```
 
-### 4. Search
+**其他框架 / 独立使用：**
 
 ```bash
-# Via OpenClaw tool
-# The agent can now use local_searcher_search, local_searcher_research, etc.
-
-# Via CLI fallback
-./bin/searx-search "Python 3.14 new features"
-./bin/searx-search -c news -n 5 "AI regulation"
-./bin/searx-search -l zh-CN "量子计算 最新进展"
+git clone https://github.com/LemonCANDY42/local-searcher.git
+cd local-searcher/services && cp .env.example .env.local && ./manage.sh up
 ```
 
-## Features
+### 3️⃣ 开搜
 
-- **`local_searcher_search`** — Normalized SearXNG search with mode-aware reranking (7 versions: v1.0–v2.0)
-- **`local_searcher_research`** — Checkpointed research runs that write `search.json` + `report.md`, resumable across sessions
-- **`local_searcher_extract`** — Readable page extraction via fetch or Playwright fallback for JS-heavy pages
-- **`local_searcher_status`** — Health check for the local stack (SearXNG, ntfy, artifacts)
+```bash
+./bin/searx-search "Python 3.14 new features"
+./bin/searx-search -c news -n 5 "AI regulation 2026"
+./bin/searx-search -l zh-CN "量子计算 最新突破"
+```
 
-### Reranking pipeline
+---
 
-local-searcher ships with a progressive reranking system:
+## ✨ Features
 
-| Version | Strategy | Use case |
-|---------|----------|----------|
-| v1.0 | Raw SearXNG order | Baseline |
-| v1.1 | Heuristic hybrid (lexical + domain priors) | Fast, no dependencies |
-| v1.2 | + Snippet embedding similarity | Better semantic matching |
-| v1.3 | Adaptive hybrid (query-bucket weighting) | Intent-aware ranking |
-| v1.4 | **Default** — retrieval-first + adaptive rerank | Best general-purpose |
-| v1.5 | + exact-fit refinement for structured lookups | Docs / packages / APIs |
-| v2.0 | Entity-aware + page-role overlay | Advanced research |
+### 🔍 四大工具
 
-### Search modes
+| Tool | 能力 | 一句话 |
+|------|------|--------|
+| `local_searcher_search` | SearXNG 搜索 + 多版本 rerank | Agent 的搜索入口 |
+| `local_searcher_research` | 断点续传式深度研究 | 长任务不怕断 |
+| `local_searcher_extract` | 网页提取 (fetch + Playwright) | JS 重度页面也能抓 |
+| `local_searcher_status` | 健康检查 | 知道栈状态 |
+
+### 📊 7 级 Reranking 流水线
+
+从原始排序到实体感知，渐进式提升搜索质量：
+
+```
+v1.0  原始 SearXNG 排序 ─────────────────────── 基线
+v1.1  启发式混合 (词法 + 域名先验) ──────────── 快、无依赖
+v1.2  + 片段嵌入相似度 ───────────────────────── 语义匹配
+v1.3  自适应混合 (查询桶加权) ────────────────── 意图感知
+v1.4  ★ 默认 ── 检索优先 + 自适应 rerank ──── 通用最优
+v1.5  + 精确拟合优化 (结构化查询) ──────────── 文档/包/API
+v2.0  实体感知 + 页面角色覆盖 ──────────────── 高级研究
+```
+
+### 🎯 搜索模式
 
 ```typescript
 mode: "auto" | "general" | "official-docs" | "github" | "models" | "packages"
 ```
 
-- `auto` — automatically detects intent from query
-- `official-docs` — biases toward official documentation
-- `github` — prioritizes GitHub repositories
-- `models` — optimized for ML model discovery
-- `packages` — package registry awareness
+Agent 只需传 query，模式自动检测。或者手动指定——查文档用 `official-docs`，找 repo 用 `github`，找模型用 `models`。
 
-## Integration
+---
 
-### OpenClaw (native plugin)
+## 🔌 Integration
+
+### OpenClaw（原生插件）
 
 ```bash
-# Install
 openclaw plugins install clawhub:local-searcher
-
-# Configure
-openclaw config set plugins.entries.local-searcher.enabled true
-openclaw config set plugins.entries.local-searcher.config.searxngBaseUrl "http://127.0.0.1:8888"
-
-# Restart
-openclaw gateway restart
+# 重启后自动注册 4 个工具，Agent 直接可用
 ```
 
-The plugin registers 4 tools automatically available to the agent.
+### MCP Server
 
-### Standalone CLI
-
-```bash
-# Direct search
-./bin/searx-search "query"
-./bin/searx-search -c news -n 5 "AI regulation"
-./bin/searx-search --json -c it "react native sqlite"
-
-# Research run (checkpointed)
-./bin/research-run -c general -n 8 "open source mobile app framework"
-# Output: runs/<timestamp>-<slug>/search.json + report.md
+```json
+{
+  "mcpServers": {
+    "local-searcher": {
+      "command": "node",
+      "args": ["path/to/local-searcher/src/index.ts"],
+      "env": { "SEARXNG_BASE_URL": "http://127.0.0.1:8888" }
+    }
+  }
+}
 ```
 
-### Docker Compose (full stack)
+### Python / LangChain
+
+```python
+import subprocess, json
+
+def local_search(query: str, limit: int = 8) -> list[dict]:
+    """调用 local-searcher CLI 搜索"""
+    result = subprocess.run(
+        ["./bin/searx-search", "--json", "-n", str(limit), query],
+        capture_output=True, text=True
+    )
+    return json.loads(result.stdout)
+
+# 在 LangChain Tool 中使用
+from langchain.tools import Tool
+search_tool = Tool(name="local_search", func=local_search, description="Local web search")
+```
+
+### Docker Compose（完整栈）
 
 ```bash
 cd services/
-cp .env.example .env.local  # edit as needed
-./manage.sh up
+./manage.sh up    # 启动 SearXNG + ntfy
+./manage.sh test  # 跑 smoke test
 ```
 
-This starts SearXNG + ntfy on localhost with health checks.
+---
 
-## Architecture
+## 🏗️ Architecture
 
 ```
-┌─────────────────────────────────────────┐
-│           AI Agent (any framework)       │
-│  OpenClaw · MCP · CrewAI · LangChain    │
-└──────────────┬──────────────────────────┘
-               │
-    ┌──────────▼──────────┐
-    │   local-searcher    │
-    │   (plugin / CLI)    │
-    ├─────────────────────┤
-    │ • search            │
-    │ • research          │
-    │ • extract           │
-    │ • status            │
-    └──────────┬──────────┘
-               │
-    ┌──────────▼──────────┐     ┌─────────────┐
-    │      SearXNG        │────▶│   Google     │
-    │  (meta-search)      │────▶│   Bing       │
-    │  localhost:8888     │────▶│   DuckDuckGo │
-    └──────────┬──────────┘     │   Qwant      │
-               │                └─────────────┘
-    ┌──────────▼──────────┐
-    │   Rerank Pipeline   │
-    │   v1.0 → v2.0       │
-    └──────────┬──────────┘
-               │
-    ┌──────────▼──────────┐
-    │   Research Runs     │
-    │   runs/<timestamp>/ │
-    │   • search.json     │
-    │   • report.md       │
-    └─────────────────────┘
+  ┌──────────────────────────────────────────────────┐
+  │             AI Agent (任意框架)                    │
+  │   OpenClaw · MCP · CrewAI · LangChain · 自研     │
+  └────────────────────┬─────────────────────────────┘
+                       │
+            ┌──────────▼──────────┐
+            │   local-searcher    │
+            │   ┌──────────────┐  │
+            │   │ search       │  │   ← 7 级 rerank
+            │   │ research     │  │   ← 断点续传
+            │   │ extract      │  │   ← Playwright fallback
+            │   │ status       │  │   ← 健康检查
+            │   └──────────────┘  │
+            └──────────┬──────────┘
+                       │
+            ┌──────────▼──────────┐
+            │      SearXNG        │     ┌──────────┐
+            │   (meta-search)     │────▶│  Google   │
+            │   localhost:8888    │────▶│  Bing     │
+            └──────────┬──────────┘────▶│  DuckDG   │
+                       │                │  Qwant    │
+            ┌──────────▼──────────┐     └──────────┘
+            │   Rerank Pipeline   │
+            │   v1.0 ──▶ v2.0    │
+            └──────────┬──────────┘
+                       │
+            ┌──────────▼──────────┐
+            │   Research Runs     │
+            │   runs/<timestamp>/ │
+            │   ├─ search.json    │
+            │   └─ report.md      │
+            └─────────────────────┘
 ```
 
-## Configuration
+---
 
-| Field | Default | Description |
-|-------|---------|-------------|
-| `searxngBaseUrl` | `http://127.0.0.1:8888` | SearXNG instance URL |
-| `ntfyBaseUrl` | `http://127.0.0.1:18082` | ntfy notification bus URL |
-| `defaultLanguage` | `en-US` | Default search language |
-| `defaultLimit` | `8` | Default result count |
-| `rerankEnabled` | `true` | Enable reranking |
-| `defaultRerankVersion` | `v1.4` | Default rerank strategy |
-| `defaultMode` | `auto` | Default search mode |
-| `fetchTimeoutMs` | `20000` | HTTP fetch timeout |
-| `browserTimeoutMs` | `45000` | Playwright timeout |
-| `maxTextChars` | `12000` | Max extracted text chars |
-| `maxLinks` | `24` | Max links per result |
+## ⚙️ Configuration
 
-## API
+| 字段 | 默认值 | 说明 |
+|------|--------|------|
+| `searxngBaseUrl` | `http://127.0.0.1:8888` | SearXNG 地址 |
+| `defaultLanguage` | `en-US` | 默认搜索语言 |
+| `defaultLimit` | `8` | 默认返回条数 |
+| `rerankEnabled` | `true` | 启用 reranking |
+| `defaultRerankVersion` | `v1.4` | 默认 rerank 版本 |
+| `defaultMode` | `auto` | 默认搜索模式 |
 
-### `local_searcher_search`
+---
 
-```typescript
-{
-  query: string;              // required
-  category?: "general" | "news" | "it" | "images" | "videos";
-  language?: string;          // e.g. "en-US", "zh-CN"
-  limit?: number;             // 1-20
-  mode?: "auto" | "general" | "official-docs" | "github" | "models" | "packages";
-  rerank?: boolean;           // default: true
-  rerankVersion?: "v1.0" | "v1.1" | "v1.2" | "v1.3" | "v1.4" | "v1.5" | "v2.0";
-  debug?: boolean;            // include rerank signals in output
-}
-```
+## 🛡️ Security
 
-### `local_searcher_research`
+- 🔒 所有服务仅绑定 `127.0.0.1`——不暴露公网
+- 🚫 零遥测——查询永不出本机
+- 🔑 无需 API Key——完全自托管
+- 📁 凭据存 `.env.local`（已 gitignore）
 
-```typescript
-{
-  query: string;
-  category?: string;
-  language?: string;
-  limit?: number;             // default: 8
-  mode?: string;
-  runLabel?: string;          // custom label for the run
-}
-```
+---
 
-Writes checkpointed output to `runs/<timestamp>-<slug>/` with `search.json` and `report.md`.
-
-### `local_searcher_extract`
-
-```typescript
-{
-  url: string;                // required
-  useBrowser?: boolean;       // force Playwright for JS-heavy pages
-  maxChars?: number;          // truncate output
-}
-```
-
-### `local_searcher_status`
-
-No parameters. Returns stack health, artifact paths, and version info.
-
-## CLI Reference
+## 🤝 Contributing
 
 ```bash
-# Search
-./bin/searx-search "query"
-./bin/searx-search -c news -n 5 "AI regulation"
-./bin/searx-search -l zh-CN "量子计算"
-./bin/searx-search --json "query"
-
-# Research run
-./bin/research-run -c general -n 8 "query"
-./bin/research-run -c it -n 5 "react native sqlite"
-
-# Stack management
-./services/manage.sh up       # start SearXNG + ntfy
-./services/manage.sh down     # stop
-./services/manage.sh status   # health check
-./services/manage.sh test     # smoke test
+git clone https://github.com/LemonCANDY42/local-searcher.git
+cd local-searcher
+# 做你的事
+git checkout -b feat/your-feature
+# 测试
+node src/index.test.mjs
+./services/manage.sh test
+# 提交
+git push origin feat/your-feature
+# 开 PR 🎉
 ```
 
-## Benchmark
+---
 
-Run the built-in benchmark suite to compare rerank versions:
+## 📄 License
 
-```bash
-node scripts/benchmark-search-v14.mjs
-```
+[MIT](LICENSE) — 随便用，不背锅。
 
-Outputs a detailed report under `runs/<timestamp>-search-info-benchmark/` with:
-- Pairwise version comparisons (wins/regressions/ties)
-- Coverage metrics per intent bucket
-- Latency breakdowns
+---
 
-## Security
-
-- All services bind to **127.0.0.1 only** — no public exposure by default
-- **Zero telemetry** — queries never leave your network
-- **No API keys** — SearXNG is fully self-hosted
-- Credentials live in `.env.local` (git-ignored)
-
-## Contributing
-
-1. Fork the repo
-2. Create a feature branch (`git checkout -b feat/my-feature`)
-3. Make your changes
-4. Run tests: `node src/index.test.mjs`
-5. Run smoke test: `./services/manage.sh test`
-6. Submit a PR
-
-## License
-
-[MIT](LICENSE)
+<p align="center">
+  <sub>Built with 🧠 by <a href="https://github.com/LemonCANDY42">Kenny</a> · Powered by <a href="https://docs.searxng.org/">SearXNG</a></sub>
+</p>
