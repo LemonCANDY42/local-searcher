@@ -4842,6 +4842,7 @@ async function searchSearxng(cfg: any, params: {
   rerankVersion?: RerankVersion;
   debug?: boolean;
   agentContract?: AgentSearchContract | null;
+  citations?: boolean;
 }) {
   const limit =
     typeof params.limit === "number" && params.limit > 0
@@ -4934,34 +4935,52 @@ async function searchSearxng(cfg: any, params: {
     },
     resultCount: finalResults.length,
     totalCandidates: merged.results.length,
-    results: finalResults.map((result) => ({
-      rank: result.rank,
-      originalRank: result.originalRank,
-      title: result.title,
-      url: result.url,
-      snippet: result.snippet,
-      engine: result.engine,
-      category: result.category,
-      categories: result.categories,
-      publishedDate: result.publishedDate,
-      host: result.host,
-      score: result.score,
-      embeddingSimilarity: result.embeddingSimilarity,
-      semanticScore: result.semanticScore,
-      signals: result.signals,
-      resultType: debug ? result.resultType : undefined,
-      solutionLikelihood: debug ? result.solutionLikelihood : undefined,
-      entityMatchStrength: debug ? result.entityMatchStrength : undefined,
-      extractionLikelihood: debug ? result.extractionLikelihood : undefined,
-      diversityValue: debug ? result.diversityValue : undefined,
-      sourceFitScore: debug ? result.sourceFitScore : undefined,
-      pageSpecificity: debug ? result.pageSpecificity : undefined,
-      pageRole: debug ? result.pageRole : undefined,
-      plannerAdjustment: debug ? result.plannerAdjustment : undefined,
-      guardedAdjustment: debug ? result.guardedAdjustment : undefined,
-      hybridAdjustment: debug ? result.hybridAdjustment : undefined,
-      why: debug ? result.why : undefined,
-    })),
+    citationsEnabled: Boolean(params.citations),
+    ...(params.citations ? {} : {
+      citationHint: "Tip: pass citations=true to append numbered references [1], [2], etc. to each result for easy attribution.",
+    }),
+    results: finalResults.map((result, index) => {
+      const base = {
+        rank: result.rank,
+        originalRank: result.originalRank,
+        title: result.title,
+        url: result.url,
+        snippet: result.snippet,
+        engine: result.engine,
+        category: result.category,
+        categories: result.categories,
+        publishedDate: result.publishedDate,
+        host: result.host,
+        score: result.score,
+        embeddingSimilarity: result.embeddingSimilarity,
+        semanticScore: result.semanticScore,
+        signals: result.signals,
+        resultType: debug ? result.resultType : undefined,
+        solutionLikelihood: debug ? result.solutionLikelihood : undefined,
+        entityMatchStrength: debug ? result.entityMatchStrength : undefined,
+        extractionLikelihood: debug ? result.extractionLikelihood : undefined,
+        diversityValue: debug ? result.diversityValue : undefined,
+        sourceFitScore: debug ? result.sourceFitScore : undefined,
+        pageSpecificity: debug ? result.pageSpecificity : undefined,
+        pageRole: debug ? result.pageRole : undefined,
+        plannerAdjustment: debug ? result.plannerAdjustment : undefined,
+        guardedAdjustment: debug ? result.guardedAdjustment : undefined,
+        hybridAdjustment: debug ? result.hybridAdjustment : undefined,
+        why: debug ? result.why : undefined,
+      };
+      if (!params.citations) {
+        return base;
+      }
+      const ref = index + 1;
+      return {
+        ...base,
+        citation: {
+          ref: `[${ref}]`,
+          formatted: `[${ref}] ${result.title}. ${result.url}${result.publishedDate ? ` (accessed ${result.publishedDate.slice(0, 10)})` : ""}`,
+          inline: `(${result.host}, ${result.publishedDate ? result.publishedDate.slice(0, 4) : "n.d."})`,
+        },
+      };
+    }),
     baseline: debug
       ? ranked.baseline.map((result) => ({
           rank: result.rank,
@@ -5381,6 +5400,7 @@ const plugin = {
           rerank: { type: "boolean" },
           rerankVersion: { type: "string", enum: [...SUPPORTED_RERANK_VERSIONS] },
           debug: { type: "boolean" },
+          citations: { type: "boolean", description: "Append numbered citation references [1], [2], etc. to each result. Default: false." },
           agentContract: {
             type: "object",
             additionalProperties: false,
@@ -5406,6 +5426,7 @@ const plugin = {
           rerankVersion: resolveRequestedRerankVersion(params.rerankVersion),
           debug: Boolean(params.debug),
           agentContract: normalizeAgentSearchContract(params.agentContract),
+          citations: typeof params.citations === "boolean" ? params.citations : undefined,
         });
         return jsonResult(result);
       },
