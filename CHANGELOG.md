@@ -4,11 +4,11 @@
 
 ### Renamed
 
-- **Renamed** from `local-searcher` to `web-searcher`
+- **Renamed** from `local-searcher` to `agent-searchkit`
 
 ### Features
 
-- **Citation mode** — pass `citations=true` to `web_searcher_search` to get numbered references `[1], [2], ...` with formatted citation text for each result
+- **Citation mode** — pass `citations=true` to `web_searchkit_search` to get numbered references `[1], [2], ...` with formatted citation text for each result
 - **Search query optimization guide** — `docs/query-optimization.md` with keyword extraction, operator reference, and reformulation strategies for agents
 - **Agent skills** — ready-to-use integration guides for OpenClaw, MCP, LangChain, CrewAI, and standalone CLI (`skills/`)
 
@@ -16,15 +16,15 @@
 
 ### 🎉 Initial public release
 
-- **Renamed** from `search-info` to `web-searcher`
+- **Renamed** from `search-info` to `agent-searchkit`
 - **Extracted** as standalone repository (previously embedded in OpenClaw workspace)
 
 ### Features
 
-- `web_searcher_search` — SearXNG search with 7-version reranking pipeline (v1.0–v2.0)
-- `web_searcher_research` — Checkpointed research runs with `search.json` + `report.md`
-- `web_searcher_extract` — Page extraction with fetch + Playwright fallback
-- `web_searcher_status` — Stack health check
+- `web_searchkit_search` — SearXNG search with 7-version reranking pipeline (v1.0–v2.0)
+- `web_searchkit_research` — Checkpointed research runs with `search.json` + `report.md`
+- `web_searchkit_extract` — Page extraction with fetch + Playwright fallback
+- `web_searchkit_status` — Stack health check
 
 ### Reranking
 

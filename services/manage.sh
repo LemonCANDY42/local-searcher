@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 ENV_FILE="$ROOT/.env.local"
-COMPOSE=(docker compose --project-name openclaw-web-searcher --env-file "$ENV_FILE" -f "$ROOT/docker-compose.yml")
+COMPOSE=(docker compose --project-name openclaw-agent-searchkit --env-file "$ENV_FILE" -f "$ROOT/docker-compose.yml")
 
 if [[ ! -f "$ENV_FILE" ]]; then
   if [[ -f "$ROOT/.env.example" ]]; then

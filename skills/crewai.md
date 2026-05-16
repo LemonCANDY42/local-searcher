@@ -1,22 +1,22 @@
-# Web Searcher — CrewAI Integration Skill
+# Agent Searchkit — CrewAI Integration Skill
 
 ## What this does
 
-Integrates web-searcher as a CrewAI Tool, giving your CrewAI agents local search capabilities.
+Integrates agent-searchkit as a CrewAI Tool, giving your CrewAI agents local search capabilities.
 
 ## Prerequisites
 
 - Python 3.10+
 - SearXNG running locally
-- web-searcher CLI scripts available
+- agent-searchkit CLI scripts available
 
 ## Setup
 
-### 1. Clone web-searcher
+### 1. Clone agent-searchkit
 
 ```bash
-git clone https://github.com/LemonCANDY42/web-searcher.git
-cd web-searcher
+git clone https://github.com/LemonCANDY42/agent-searchkit.git
+cd agent-searchkit
 ```
 
 ### 2. Create CrewAI tools
@@ -27,7 +27,7 @@ import json
 from crewai.tools import BaseTool
 from pydantic import BaseModel, Field
 
-WEB_SEARCHER_PATH = "/path/to/web-searcher"
+WEB_SEARCHER_PATH = "/path/to/agent-searchkit"
 
 class SearchInput(BaseModel):
     query: str = Field(description="Search query")

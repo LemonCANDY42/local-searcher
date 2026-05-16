@@ -170,7 +170,7 @@ test("v1.5 planner adjustment promotes practical artifacts for solution hunt", (
 });
 
 test("v1.5 guarded adjustment protects canonical docs in github/source-seeking queries", () => {
-  const query = "OpenClaw web-searcher plugin github code";
+  const query = "OpenClaw agent-searchkit plugin github code";
   const intent = __test.detectQueryIntent(query, "github");
   const planner = __test.buildPlannerOutput(query, intent);
   const ranked = __test.annotateResultDiagnostics(
@@ -809,17 +809,17 @@ test("v1.5 broad discovery downranks platform-only meta results on mixed-intent 
 
 test("structured token matching handles hyphenated tool names across spacing variants", () => {
   assert.equal(
-    __test.countTokenMatches("Search Info Plugin Overview", ["web-searcher", "plugin"]),
+    __test.countTokenMatches("Search Info Plugin Overview", ["agent-searchkit", "plugin"]),
     2,
   );
   assert.equal(
-    __test.textIncludesQueryPhrase("OpenClaw Search Info Plugin", "web-searcher plugin"),
+    __test.textIncludesQueryPhrase("OpenClaw Search Info Plugin", "agent-searchkit plugin"),
     true,
   );
 });
 
 test("structured entity matching promotes punctuation-variant docs results", () => {
-  const query = "web-searcher plugin docs";
+  const query = "agent-searchkit plugin docs";
   const intent = __test.detectQueryIntent(query, "official-docs");
   const planner = __test.buildPlannerOutput(query, intent);
   const ranked = __test.annotateResultDiagnostics(

@@ -10,7 +10,7 @@ const runsRoot = path.join(serviceRoot, 'runs');
 
 async function findLatestBenchmarkJson() {
   const entries = await fs.readdir(runsRoot, { withFileTypes: true }).catch(() => []);
-  const runDirSuffixes = ['-web-searcher-benchmark', '-web-searcher-v14-benchmark'];
+  const runDirSuffixes = ['-agent-searchkit-benchmark', '-agent-searchkit-v14-benchmark'];
   const dirs = entries
     .filter((entry) => entry.isDirectory() && runDirSuffixes.some((suffix) => entry.name.endsWith(suffix)))
     .map((entry) => path.join(runsRoot, entry.name));

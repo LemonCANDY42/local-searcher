@@ -1,4 +1,4 @@
-# Web Searcher — OpenClaw Plugin Skill
+# Agent Searchkit — OpenClaw Plugin Skill
 
 ## What this does
 
@@ -7,9 +7,9 @@ Gives your OpenClaw agent local search, reranking, research pipelines, and page 
 ## Install
 
 ```bash
-openclaw plugins install clawhub:web-searcher
-openclaw config set plugins.entries.web-searcher.enabled true
-openclaw config set plugins.entries.web-searcher.config.searxngBaseUrl "http://127.0.0.1:8888"
+openclaw plugins install clawhub:agent-searchkit
+openclaw config set plugins.entries.agent-searchkit.enabled true
+openclaw config set plugins.entries.agent-searchkit.config.searxngBaseUrl "http://127.0.0.1:8888"
 openclaw gateway restart
 ```
 
@@ -17,10 +17,10 @@ openclaw gateway restart
 
 ```bash
 # Check plugin loaded
-openclaw status | grep web-searcher
+openclaw status | grep agent-searchkit
 
 # Run smoke test
-cd ~/.openclaw/workspace/services/web-searcher
+cd ~/.openclaw/workspace/services/agent-searchkit
 ./manage.sh test
 ```
 
@@ -28,36 +28,36 @@ cd ~/.openclaw/workspace/services/web-searcher
 
 | Tool | What it does |
 |------|-------------|
-| `web_searcher_search` | Search with multi-version reranking |
-| `web_searcher_research` | Checkpointed deep research runs |
-| `web_searcher_extract` | Page extraction (fetch + Playwright) |
-| `web_searcher_status` | Stack health check |
+| `web_searchkit_search` | Search with multi-version reranking |
+| `web_searchkit_research` | Checkpointed deep research runs |
+| `web_searchkit_extract` | Page extraction (fetch + Playwright) |
+| `web_searchkit_status` | Stack health check |
 
 ## Usage patterns
 
 ### Basic search
 ```
-Use web_searcher_search to find "React 19 new features"
+Use web_searchkit_search to find "React 19 new features"
 ```
 
 ### Search with options
 ```
-Use web_searcher_search with query="asyncio semaphore", mode="official-docs", language="en-US"
+Use web_searchkit_search with query="asyncio semaphore", mode="official-docs", language="en-US"
 ```
 
 ### Deep research
 ```
-Use web_searcher_research to research "local LLM inference benchmarks 2026"
+Use web_searchkit_research to research "local LLM inference benchmarks 2026"
 ```
 
 ### Page extraction
 ```
-Use web_searcher_extract to extract content from https://example.com/article
+Use web_searchkit_extract to extract content from https://example.com/article
 ```
 
 ## Configuration
 
-Set in `openclaw.json` under `plugins.entries.web-searcher.config`:
+Set in `openclaw.json` under `plugins.entries.agent-searchkit.config`:
 
 | Key | Default | Description |
 |-----|---------|-------------|

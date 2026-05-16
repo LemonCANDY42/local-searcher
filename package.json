@@ -1,12 +1,12 @@
 {
-  "name": "web-searcher",
+  "name": "agent-searchkit",
   "version": "0.3.0",
   "description": "Local-first SearXNG search + reranking + research pipelines for AI agents. Framework-agnostic.",
   "type": "module",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/LemonCANDY42/web-searcher"
+    "url": "https://github.com/LemonCANDY42/agent-searchkit"
   },
   "keywords": [
     "searxng",

@@ -1,8 +1,8 @@
-# Web Searcher — Standalone CLI Skill
+# Agent Searchkit — Standalone CLI Skill
 
 ## What this does
 
-Use web-searcher directly from the command line without any agent framework.
+Use agent-searchkit directly from the command line without any agent framework.
 
 ## Prerequisites
 
@@ -12,8 +12,8 @@ Use web-searcher directly from the command line without any agent framework.
 ## Quick start
 
 ```bash
-git clone https://github.com/LemonCANDY42/web-searcher.git
-cd web-searcher/services
+git clone https://github.com/LemonCANDY42/agent-searchkit.git
+cd agent-searchkit/services
 cp .env.example .env.local
 ./manage.sh up
 ```

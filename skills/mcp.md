@@ -1,8 +1,8 @@
-# Web Searcher — MCP Server Skill
+# Agent Searchkit — MCP Server Skill
 
 ## What this does
 
-Exposes web-searcher as an MCP (Model Context Protocol) server, usable by any MCP-compatible agent (Claude Desktop, Cursor, Continue, etc.).
+Exposes agent-searchkit as an MCP (Model Context Protocol) server, usable by any MCP-compatible agent (Claude Desktop, Cursor, Continue, etc.).
 
 ## Prerequisites
 
@@ -14,8 +14,8 @@ Exposes web-searcher as an MCP (Model Context Protocol) server, usable by any MC
 ### 1. Clone and install
 
 ```bash
-git clone https://github.com/LemonCANDY42/web-searcher.git
-cd web-searcher
+git clone https://github.com/LemonCANDY42/agent-searchkit.git
+cd agent-searchkit
 npm install
 ```
 
@@ -26,9 +26,9 @@ Add to your MCP client config (e.g., `claude_desktop_config.json` or `.cursor/mc
 ```json
 {
   "mcpServers": {
-    "web-searcher": {
+    "agent-searchkit": {
       "command": "node",
-      "args": ["path/to/web-searcher/src/index.ts"],
+      "args": ["path/to/agent-searchkit/src/index.ts"],
       "env": {
         "SEARXNG_BASE_URL": "http://127.0.0.1:8888"
       }
@@ -37,7 +37,7 @@ Add to your MCP client config (e.g., `claude_desktop_config.json` or `.cursor/mc
 }
 ```
 
-Replace `path/to/web-searcher` with the actual clone path.
+Replace `path/to/agent-searchkit` with the actual clone path.
 
 ### 3. Verify
 
@@ -45,10 +45,10 @@ Restart your MCP client. The following tools should appear:
 
 | Tool | Description |
 |------|-------------|
-| `web_searcher_search` | Search with reranking |
-| `web_searcher_research` | Checkpointed research |
-| `web_searcher_extract` | Page extraction |
-| `web_searcher_status` | Health check |
+| `web_searchkit_search` | Search with reranking |
+| `web_searchkit_research` | Checkpointed research |
+| `web_searchkit_extract` | Page extraction |
+| `web_searchkit_status` | Health check |
 
 ## Environment variables
 
@@ -63,10 +63,10 @@ Restart your MCP client. The following tools should appear:
 Once configured, your agent can call:
 
 ```
-web_searcher_search(query="TypeScript 5.5 new features", mode="official-docs")
-web_searcher_search(query="Redis vs Valkey benchmark", category="it")
-web_searcher_research(query="AI agent frameworks comparison 2026")
-web_searcher_extract(url="https://example.com/article")
+web_searchkit_search(query="TypeScript 5.5 new features", mode="official-docs")
+web_searchkit_search(query="Redis vs Valkey benchmark", category="it")
+web_searchkit_research(query="AI agent frameworks comparison 2026")
+web_searchkit_extract(url="https://example.com/article")
 ```
 
 ## Troubleshooting

@@ -1,6 +1,6 @@
 {
-  "id": "web-searcher",
-  "name": "Web Searcher",
+  "id": "agent-searchkit",
+  "name": "Agent Searchkit",
   "description": "Local-first SearXNG search + reranking + research pipelines for AI agents. Framework-agnostic.",
   "version": "0.3.0",
   "configSchema": {

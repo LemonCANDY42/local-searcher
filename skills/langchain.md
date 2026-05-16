@@ -1,22 +1,22 @@
-# Web Searcher — LangChain Integration Skill
+# Agent Searchkit — LangChain Integration Skill
 
 ## What this does
 
-Integrates web-searcher as a LangChain Tool, giving your LangChain agent local search capabilities with reranking.
+Integrates agent-searchkit as a LangChain Tool, giving your LangChain agent local search capabilities with reranking.
 
 ## Prerequisites
 
 - Python 3.10+
 - SearXNG running locally
-- web-searcher CLI scripts available
+- agent-searchkit CLI scripts available
 
 ## Setup
 
-### 1. Clone web-searcher
+### 1. Clone agent-searchkit
 
 ```bash
-git clone https://github.com/LemonCANDY42/web-searcher.git
-cd web-searcher
+git clone https://github.com/LemonCANDY42/agent-searchkit.git
+cd agent-searchkit
 ```
 
 ### 2. Create a LangChain tool
@@ -26,10 +26,10 @@ import subprocess
 import json
 from langchain.tools import Tool
 
-WEB_SEARCHER_PATH = "/path/to/web-searcher"
+WEB_SEARCHER_PATH = "/path/to/agent-searchkit"
 
 def local_search(query: str, limit: int = 8, mode: str = "auto") -> list[dict]:
-    """Search using web-searcher CLI."""
+    """Search using agent-searchkit CLI."""
     result = subprocess.run(
         [
             f"{WEB_SEARCHER_PATH}/bin/searx-search",

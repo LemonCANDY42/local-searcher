@@ -42,9 +42,9 @@ wait_url "http://127.0.0.1:${NTFY_PORT}/v1/health" 20
 curl -fsS "http://127.0.0.1:${NTFY_PORT}/v1/health"
 
 echo
-echo "==> web-searcher plugin unit tests"
-node --test "$WORKSPACE_ROOT/.openclaw/extensions/web-searcher/index.test.mjs"
+echo "==> agent-searchkit plugin unit tests"
+node --test "$WORKSPACE_ROOT/.openclaw/extensions/agent-searchkit/index.test.mjs"
 
 echo
-echo "==> web-searcher rollout contract"
-node "$ROOT/scripts/validate-web-searcher-rollout.mjs"
+echo "==> agent-searchkit rollout contract"
+node "$ROOT/scripts/validate-agent-searchkit-rollout.mjs"
