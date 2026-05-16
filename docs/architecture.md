@@ -2,7 +2,7 @@
 
 ## Overview
 
-local-searcher is a layered search infrastructure:
+web-searcher is a layered search infrastructure:
 
 ```
 Agent Layer (OpenClaw / MCP / any framework)
@@ -18,7 +18,7 @@ SearXNG (meta-search: Google + Bing + DDG + Qwant)
 
 ### SearXNG
 
-Open-source meta-search engine. Aggregates results from multiple search engines. local-searcher uses its JSON API (`format=json`).
+Open-source meta-search engine. Aggregates results from multiple search engines. web-searcher uses its JSON API (`format=json`).
 
 ### Rerank Pipeline
 
@@ -48,7 +48,7 @@ Local notification bus for research-run progress updates. Not required for core 
 
 ## Data Flow
 
-1. Agent calls `local_searcher_search` with query + options
+1. Agent calls `web_searcher_search` with query + options
 2. Query is classified into an intent bucket (official-docs, github, models, etc.)
 3. SearXNG returns raw results from multiple engines
 4. Rerank pipeline scores and reorders results

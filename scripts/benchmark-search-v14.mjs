@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { performance } from 'node:perf_hooks';
-import { __test } from '../../../.openclaw/extensions/local-searcher/index.ts';
+import { __test } from '../../../.openclaw/extensions/web-searcher/index.ts';
 import {
   aggregatePackMetrics,
   aggregateVersionMetrics,
@@ -37,7 +37,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const serviceRoot = path.resolve(__dirname, '..');
 const runsRoot = path.join(serviceRoot, 'runs');
 
-const DEFAULT_SEED = 'local-searcher-benchmark';
+const DEFAULT_SEED = 'web-searcher-benchmark';
 const DEFAULT_RESULT_LIMIT = 8;
 
 const cfg = {
@@ -351,7 +351,7 @@ const coverageSummary = {
   representationTags: summarizeArrayCoverage(cases, 'representationTags'),
 };
 const evaluationTracks = BENCHMARK_TRACKS;
-const runId = `${nowIsoCompact()}-local-searcher-benchmark`;
+const runId = `${nowIsoCompact()}-web-searcher-benchmark`;
 const runDir = path.join(runsRoot, runId);
 await fs.mkdir(runDir, { recursive: true });
 
@@ -602,7 +602,7 @@ const caseMatrixDivider = [
 ].join('');
 
 const reportLines = [
-  '# local-searcher benchmark / compare report',
+  '# web-searcher benchmark / compare report',
   '',
   `- Run ID: \`${runId}\``,
   `- Seed: \`${seed}\``,

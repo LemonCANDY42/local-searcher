@@ -4,15 +4,15 @@
 
 ### 🎉 Initial public release
 
-- **Renamed** from `search-info` to `local-searcher`
+- **Renamed** from `search-info` to `web-searcher`
 - **Extracted** as standalone repository (previously embedded in OpenClaw workspace)
 
 ### Features
 
-- `local_searcher_search` — SearXNG search with 7-version reranking pipeline (v1.0–v2.0)
-- `local_searcher_research` — Checkpointed research runs with `search.json` + `report.md`
-- `local_searcher_extract` — Page extraction with fetch + Playwright fallback
-- `local_searcher_status` — Stack health check
+- `web_searcher_search` — SearXNG search with 7-version reranking pipeline (v1.0–v2.0)
+- `web_searcher_research` — Checkpointed research runs with `search.json` + `report.md`
+- `web_searcher_extract` — Page extraction with fetch + Playwright fallback
+- `web_searcher_status` — Stack health check
 
 ### Reranking
 

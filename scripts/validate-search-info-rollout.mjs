@@ -6,7 +6,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const workspaceDir = path.resolve(scriptDir, "../../..");
-const pluginDir = path.join(workspaceDir, ".openclaw", "extensions", "local-searcher");
+const pluginDir = path.join(workspaceDir, ".openclaw", "extensions", "web-searcher");
 
 const [{ default: plugin, __test }, manifest] = await Promise.all([
   import(pathToFileURL(path.join(pluginDir, "index.ts")).href),
@@ -32,7 +32,7 @@ assert.equal(
 
 const openclawConfigPath = path.join(os.homedir(), ".openclaw", "openclaw.json");
 const openclawConfig = JSON.parse(await fs.readFile(openclawConfigPath, "utf8"));
-const pluginConfig = openclawConfig?.plugins?.entries?.["local-searcher"]?.config ?? {};
+const pluginConfig = openclawConfig?.plugins?.entries?.["web-searcher"]?.config ?? {};
 const configuredDefault = pluginConfig.defaultRerankVersion ?? runtimeDefault;
 
 assert.equal(
@@ -50,8 +50,8 @@ plugin.register({
   },
 });
 
-const statusTool = tools.get("local_searcher_status");
-assert.ok(statusTool, "local_searcher_status tool was not registered");
+const statusTool = tools.get("web_searcher_status");
+assert.ok(statusTool, "web_searcher_status tool was not registered");
 
 const status = await statusTool.execute();
 const statusRerank = status?.structuredContent?.rerank ?? {};
@@ -59,14 +59,14 @@ const statusRerank = status?.structuredContent?.rerank ?? {};
 assert.deepEqual(
   statusRerank.availableVersions,
   runtimeVersions,
-  `local_searcher_status availableVersions drifted: ${JSON.stringify(statusRerank.availableVersions)}`,
+  `web_searcher_status availableVersions drifted: ${JSON.stringify(statusRerank.availableVersions)}`,
 );
 assert.equal(
   statusRerank.defaultRerankVersion,
   configuredDefault,
-  `local_searcher_status defaultRerankVersion drifted: status=${statusRerank.defaultRerankVersion} config=${configuredDefault}`,
+  `web_searcher_status defaultRerankVersion drifted: status=${statusRerank.defaultRerankVersion} config=${configuredDefault}`,
 );
 
-console.log("local-searcher rollout contract ok");
+console.log("web-searcher rollout contract ok");
 console.log(`versions: ${runtimeVersions.join(", ")}`);
 console.log(`default: ${configuredDefault}`);

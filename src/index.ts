@@ -2613,7 +2613,7 @@ async function fetchWithTimeout(url: string, opts: { timeoutMs?: number; headers
   try {
     const res = await fetch(url, {
       headers: {
-        "user-agent": "OpenClaw local-searcher plugin",
+        "user-agent": "OpenClaw web-searcher plugin",
         ...(opts.headers ?? {}),
       },
       signal: controller.signal,
@@ -2936,7 +2936,7 @@ async function ensureThreadBindingsExportModule() {
   }
 
   const sourcePath = path.join(pluginSdkDir, threadBindingsFile);
-  const exportDir = path.join(os.tmpdir(), "openclaw-local-searcher-plugin-sdk");
+  const exportDir = path.join(os.tmpdir(), "openclaw-web-searcher-plugin-sdk");
   const exportPath = path.join(exportDir, `${threadBindingsFile.replace(/\.js$/, "")}-embedding-export.mjs`);
 
   let shouldWrite = true;
@@ -2945,7 +2945,7 @@ async function ensureThreadBindingsExportModule() {
     shouldWrite = sourceStat.mtimeMs > exportStat.mtimeMs;
     if (!shouldWrite) {
       const existing = await fs.readFile(exportPath, "utf8");
-      shouldWrite = !existing.includes("local-searcher-cpu-embed");
+      shouldWrite = !existing.includes("web-searcher-cpu-embed");
     }
   } catch {
     shouldWrite = true;
@@ -2972,7 +2972,7 @@ async function ensureThreadBindingsExportModule() {
         "if (!llama) llama = await getLlama({ logLevel: LlamaLogLevel.error });",
         "if (!llama) llama = await getLlama({ logLevel: LlamaLogLevel.error, gpu: false });",
       );
-    source += "\n// local-searcher-cpu-embed\nexport { createEmbeddingProvider };\n";
+    source += "\n// web-searcher-cpu-embed\nexport { createEmbeddingProvider };\n";
     await fs.writeFile(exportPath, source, "utf8");
   }
 
@@ -5068,7 +5068,7 @@ function resolvePluginCfg(api: any) {
   const serviceRoot =
     typeof cfg.serviceRoot === "string" && cfg.serviceRoot.trim()
       ? cfg.serviceRoot
-      : path.join(workspaceDir, "services", "local-searcher");
+      : path.join(workspaceDir, "services", "web-searcher");
   return {
     workspaceDir,
     serviceRoot,
@@ -5215,7 +5215,7 @@ function extractLinksFromHtml(html: string, maxLinks: number) {
 async function browserExtract(cfg: any, url: string, screenshot: boolean) {
   const scriptPath = path.join(cfg.extractRoot, "scripts", "extract.mjs");
   await fs.access(scriptPath);
-  const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-local-searcher-"));
+  const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-web-searcher-"));
   const outJson = path.join(tmpDir, "page.json");
   const outShot = screenshot ? path.join(tmpDir, "page.png") : undefined;
   const args = [scriptPath, url, outJson];
@@ -5253,8 +5253,8 @@ async function detectLegacyContainers() {
 }
 
 const plugin = {
-  id: "local-searcher",
-  name: "Local Searcher",
+  id: "web-searcher",
+  name: "Web Searcher",
   description: "Local-first research tools for SearXNG search, checkpointed research runs, and page extraction.",
   configSchema: {
     type: "object",
@@ -5279,8 +5279,8 @@ const plugin = {
   },
   register(api: any) {
     api.registerTool({
-      name: "local_searcher_status",
-      description: "Check local Search Info stack health, artifact paths, and whether legacy Miniflux/Memos containers are still present.",
+      name: "web_searcher_status",
+      description: "Check local Web Searcher stack health, artifact paths, and whether legacy Miniflux/Memos containers are still present.",
       parameters: {
         type: "object",
         additionalProperties: false,
@@ -5366,7 +5366,7 @@ const plugin = {
     });
 
     api.registerTool({
-      name: "local_searcher_search",
+      name: "web_searcher_search",
       description: "Search the local SearXNG research stack and return normalized web results with engine-health hints plus mode-aware reranking.",
       parameters: {
         type: "object",
@@ -5412,8 +5412,8 @@ const plugin = {
     });
 
     api.registerTool({
-      name: "local_searcher_research",
-      description: "Run a checkpointed local research search and save search.json + report.md under services/local-searcher/runs/.",
+      name: "web_searcher_research",
+      description: "Run a checkpointed local research search and save search.json + report.md under services/web-searcher/runs/.",
       parameters: {
         type: "object",
         additionalProperties: false,
@@ -5512,7 +5512,7 @@ const plugin = {
     });
 
     api.registerTool({
-      name: "local_searcher_extract",
+      name: "web_searcher_extract",
       description: "Extract readable page content from a URL using local fetch or the Playwright fallback. Can optionally create a screenshot.",
       parameters: {
         type: "object",

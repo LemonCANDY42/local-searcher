@@ -202,7 +202,7 @@ export const CASE_POOLS = [
     "qualityFocus": "guarded",
     "queries": [
       "OpenClaw Browser Relay github",
-      "OpenClaw local-searcher plugin github code",
+      "OpenClaw web-searcher plugin github code",
       "OpenClaw browser control github repository"
     ],
     "category": "it",
@@ -219,7 +219,7 @@ export const CASE_POOLS = [
     "expectTerms": [
       "openclaw",
       "browser relay",
-      "local-searcher",
+      "web-searcher",
       "github"
     ],
     "layerNames": [

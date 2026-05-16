@@ -1,6 +1,6 @@
 {
-  "id": "local-searcher",
-  "name": "Local Searcher",
+  "id": "web-searcher",
+  "name": "Web Searcher",
   "description": "Local-first SearXNG search + reranking + research pipelines for AI agents. Framework-agnostic.",
   "version": "0.3.0",
   "configSchema": {
