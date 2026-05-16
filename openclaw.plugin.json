@@ -3,6 +3,7 @@
   "name": "Agent Searchkit",
   "description": "Local-first SearXNG search + reranking + research pipelines for AI agents. Framework-agnostic.",
   "version": "0.3.0",
+  "webSearchProviders": ["agent-searchkit"],
   "configSchema": {
     "type": "object",
     "additionalProperties": false,

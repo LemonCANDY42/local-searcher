@@ -7,11 +7,21 @@ Gives your OpenClaw agent local search, reranking, research pipelines, and page 
 ## Install
 
 ```bash
+# 1. Install the plugin
 openclaw plugins install clawhub:agent-searchkit
 openclaw config set plugins.entries.agent-searchkit.enabled true
 openclaw config set plugins.entries.agent-searchkit.config.searxngBaseUrl "http://127.0.0.1:8888"
+
+# 2. Set as default web search (optional but recommended)
+openclaw config set tools.web.search.provider agent-searchkit
+
+# 3. Restart
 openclaw gateway restart
 ```
+
+After install, agent-searchkit registers as an OpenClaw web-search provider.
+With `tools.web.search.provider: "agent-searchkit"`, the built-in `web_search`
+tool automatically uses SearXNG + reranking — no extra tool calls needed.
 
 ## Verify
 

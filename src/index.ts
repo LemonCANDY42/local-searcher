@@ -5573,6 +5573,33 @@ const plugin = {
         return jsonResult(result);
       },
     });
+
+    // Register as an OpenClaw web-search provider so agent-searchkit
+    // can be set as the default web_search backend.
+    api.registerWebSearchProvider({
+      id: "agent-searchkit",
+      label: "Agent Searchkit (SearXNG + reranking)",
+      search: async (req: { query: string; count?: number; language?: string }) => {
+        const cfg = resolvePluginCfg(api);
+        const limit = typeof req.count === "number" ? Math.min(20, Math.max(1, req.count)) : cfg.defaultLimit;
+        const language = typeof req.language === "string" ? req.language : cfg.defaultLanguage;
+        const result = await searchSearxng(cfg, {
+          query: req.query,
+          limit,
+          language,
+          rerank: cfg.rerankEnabled,
+          rerankVersion: cfg.defaultRerankVersion,
+        });
+        return {
+          results: (result.results ?? []).map((r: any) => ({
+            title: r.title ?? "",
+            url: r.url ?? "",
+            snippet: r.snippet ?? "",
+            host: r.host ?? "",
+          })),
+        };
+      },
+    });
   },
 };
 

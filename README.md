@@ -101,11 +101,21 @@ docker run -d --name searxng -p 8888:8080 searxng/searxng
 **OpenClaw 用户：**
 
 ```bash
+# 1. 安装插件
 openclaw plugins install clawhub:agent-searchkit
 openclaw config set plugins.entries.agent-searchkit.enabled true
 openclaw config set plugins.entries.agent-searchkit.config.searxngBaseUrl "http://127.0.0.1:8888"
+
+# 2. 设为默认 web search（可选，安装后自动可用）
+openclaw config set tools.web.search.provider agent-searchkit
+
+# 3. 重启生效
 openclaw gateway restart
 ```
+
+安装后 agent-searchkit 会注册为 OpenClaw 的 web search provider。
+设置 `tools.web.search.provider: "agent-searchkit"` 后，
+Agent 调用 `web_search` 时会自动走 agent-searchkit 的 SearXNG + reranking 流水线。
 
 **其他框架 / 独立使用：**
 

@@ -8,6 +8,7 @@
 
 ### Features
 
+- **OpenClaw web-search provider** — plugin registers as an OpenClaw web-search provider; set `tools.web.search.provider: "agent-searchkit"` to make `web_search` use SearXNG + reranking automatically
 - **Citation mode** — pass `citations=true` to `web_searchkit_search` to get numbered references `[1], [2], ...` with formatted citation text for each result
 - **Search query optimization guide** — `docs/query-optimization.md` with keyword extraction, operator reference, and reformulation strategies for agents
 - **Agent skills** — ready-to-use integration guides for OpenClaw, MCP, LangChain, CrewAI, and standalone CLI (`skills/`)
