@@ -5579,26 +5579,59 @@ const plugin = {
     api.registerWebSearchProvider({
       id: "agent-searchkit",
       label: "Agent Searchkit (SearXNG + reranking)",
-      search: async (req: { query: string; count?: number; language?: string }) => {
-        const cfg = resolvePluginCfg(api);
-        const limit = typeof req.count === "number" ? Math.min(20, Math.max(1, req.count)) : cfg.defaultLimit;
-        const language = typeof req.language === "string" ? req.language : cfg.defaultLanguage;
-        const result = await searchSearxng(cfg, {
-          query: req.query,
-          limit,
-          language,
-          rerank: cfg.rerankEnabled,
-          rerankVersion: cfg.defaultRerankVersion,
-        });
-        return {
-          results: (result.results ?? []).map((r: any) => ({
-            title: r.title ?? "",
-            url: r.url ?? "",
-            snippet: r.snippet ?? "",
-            host: r.host ?? "",
-          })),
-        };
+      hint: "Local-first SearXNG search with Agent Searchkit reranking",
+      onboardingScopes: ["text-inference"],
+      requiresCredential: false,
+      credentialLabel: "SearXNG Base URL",
+      envVars: [],
+      placeholder: DEFAULTS.searxngBaseUrl,
+      signupUrl: "https://github.com/LemonCANDY42/agent-searchkit",
+      docsUrl: "https://github.com/LemonCANDY42/agent-searchkit#readme",
+      autoDetectOrder: 210,
+      credentialPath: "plugins.entries.agent-searchkit.config.searxngBaseUrl",
+      getCredentialValue: () => undefined,
+      setCredentialValue: () => {},
+      getConfiguredCredentialValue: (config?: any) => config?.plugins?.entries?.["agent-searchkit"]?.config?.searxngBaseUrl,
+      setConfiguredCredentialValue: (configTarget: any, value: unknown) => {
+        configTarget.plugins ??= {};
+        configTarget.plugins.entries ??= {};
+        configTarget.plugins.entries["agent-searchkit"] ??= {};
+        configTarget.plugins.entries["agent-searchkit"].config ??= {};
+        configTarget.plugins.entries["agent-searchkit"].config.searxngBaseUrl = value;
       },
+      createTool: () => ({
+        description: "Search the web using Agent Searchkit: self-hosted SearXNG retrieval plus local reranking.",
+        parameters: {
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            query: { type: "string", minLength: 1 },
+            count: { type: "number", minimum: 1, maximum: 20 },
+            language: { type: "string" },
+          },
+          required: ["query"],
+        },
+        execute: async (args: Record<string, unknown>) => {
+          const cfg = resolvePluginCfg(api);
+          const limit = typeof args.count === "number" ? Math.min(20, Math.max(1, args.count)) : cfg.defaultLimit;
+          const language = typeof args.language === "string" ? args.language : cfg.defaultLanguage;
+          const result = await searchSearxng(cfg, {
+            query: String(args.query ?? ""),
+            limit,
+            language,
+            rerank: cfg.rerankEnabled,
+            rerankVersion: cfg.defaultRerankVersion,
+          });
+          return {
+            results: (result.results ?? []).map((r: any) => ({
+              title: r.title ?? "",
+              url: r.url ?? "",
+              snippet: r.snippet ?? "",
+              host: r.host ?? "",
+            })),
+          };
+        },
+      }),
     });
   },
 };

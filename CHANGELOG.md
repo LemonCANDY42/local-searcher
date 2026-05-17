@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.6 (2026-05-17)
+
+### Fixed
+
+- Implement the OpenClaw 2026.5.12 web-search provider runtime contract with provider-owned `createTool(...)` so `tools.web.search.provider = "agent-searchkit"` works at call time.
+
 ## 0.3.5 (2026-05-17)
 
 ### Fixed
