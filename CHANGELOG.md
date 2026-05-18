@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.10 (2026-05-18)
+
+### Fixed
+
+- Expand LM Studio setup guidance with Windows global-install configuration using the `.cmd` shim from `where agent-searchkit-mcp`.
+- Lazy-load the heavy search bundle after MCP initialization so LM Studio can complete the stdio handshake before search code is loaded.
+
 ## 0.3.9 (2026-05-18)
 
 ### Fixed

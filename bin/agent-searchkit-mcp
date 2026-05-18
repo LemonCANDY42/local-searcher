@@ -7,7 +7,12 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const distPath = path.join(__dirname, '..', 'dist', 'index.js');
 const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
 const serverVersion = packageJson.version || '0.0.0';
-const pluginModulePromise = import(pathToFileURL(distPath).href);
+let pluginModulePromise;
+
+function loadPluginModule() {
+  pluginModulePromise ??= import(pathToFileURL(distPath).href);
+  return pluginModulePromise;
+}
 
 function normalizeSearxngBaseUrl(value) {
   const base = (value || 'http://127.0.0.1:8888').replace(/\/+$/, '');
@@ -17,7 +22,7 @@ function normalizeSearxngBaseUrl(value) {
 async function runSearch(args) {
   const query = String(args?.query || '').trim();
   if (!query) throw new Error('query is required');
-  const { runAgentSearchkitSearch } = await pluginModulePromise;
+  const { runAgentSearchkitSearch } = await loadPluginModule();
   if (typeof runAgentSearchkitSearch !== 'function') throw new Error('dist/index.js does not export runAgentSearchkitSearch; run npm run build');
   return await runAgentSearchkitSearch({
     searxngBaseUrl: normalizeSearxngBaseUrl(process.env.SEARXNG_BASE_URL),

@@ -117,7 +117,31 @@ openclaw gateway restart
 
 **LM Studio / GUI 客户端推荐：**
 
-GUI 应用有时不会继承 shell 的 PATH，并且首次 `npx` 下载可能超过 MCP 初始化超时。对 LM Studio，推荐先全局安装，再在 `mcp.json` 里写绝对路径：
+GUI 应用有时不会继承 shell 的 PATH，并且首次 `npx` 下载可能超过 MCP 初始化超时。对 LM Studio，推荐先全局安装，再在 `mcp.json` 里写绝对路径。
+
+Windows:
+
+```bat
+npm install -g agent-searchkit@latest
+where agent-searchkit-mcp
+agent-searchkit-mcp --help
+```
+
+```json
+{
+  "mcpServers": {
+    "agent-searchkit": {
+      "command": "C:\\Users\\YOUR_USER\\AppData\\Roaming\\npm\\agent-searchkit-mcp.cmd",
+      "args": [],
+      "env": {
+        "SEARXNG_BASE_URL": "http://127.0.0.1:8888"
+      }
+    }
+  }
+}
+```
+
+macOS / Linux:
 
 ```bash
 npm install -g agent-searchkit@latest
@@ -139,7 +163,7 @@ agent-searchkit-mcp --help
 }
 ```
 
-macOS / Linux 不要使用 Windows 的 `"command": "cmd"` + `"/c"` 写法；只有 Windows 需要 `cmd /c`。如果你的 SearXNG 是 OpenClaw 本地实例，通常把 `SEARXNG_BASE_URL` 改为 `http://127.0.0.1:18080`。
+如果你有自己的 SearXNG，保持 `SEARXNG_BASE_URL` 为它的地址；如果复用 OpenClaw 本地实例，通常改为 `http://127.0.0.1:18080`。
 
 **本地源码开发：**
 
