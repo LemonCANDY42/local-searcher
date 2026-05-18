@@ -11,24 +11,34 @@ Exposes agent-searchkit as an MCP (Model Context Protocol) server, usable by any
 
 ## Setup
 
-### 1. Clone and install
+### 1. Choose an install path
+
+For normal MCP client use, prefer npm:
+
+```bash
+npm install -g agent-searchkit
+agent-searchkit-mcp --help
+```
+
+For local development:
 
 ```bash
 git clone https://github.com/LemonCANDY42/agent-searchkit.git
 cd agent-searchkit
 npm install
+npm run build
 ```
 
 ### 2. Configure your MCP client
 
-Add to your MCP client config (e.g., `claude_desktop_config.json` or `.cursor/mcp.json`):
+Add to your MCP client config (e.g., `claude_desktop_config.json` or `.cursor/mcp.json`). macOS/Linux can use `npx`:
 
 ```json
 {
   "mcpServers": {
     "agent-searchkit": {
-      "command": "node",
-      "args": ["path/to/agent-searchkit/src/index.ts"],
+      "command": "npx",
+      "args": ["-y", "agent-searchkit@latest", "agent-searchkit-mcp"],
       "env": {
         "SEARXNG_BASE_URL": "http://127.0.0.1:8888"
       }
@@ -37,7 +47,9 @@ Add to your MCP client config (e.g., `claude_desktop_config.json` or `.cursor/mc
 }
 ```
 
-Replace `path/to/agent-searchkit` with the actual clone path.
+On Windows, use `"command": "cmd"` and `"args": ["/c", "npx", "-y", "agent-searchkit@latest", "agent-searchkit-mcp"]`.
+
+For a local checkout, set `command` to `/absolute/path/to/agent-searchkit/bin/agent-searchkit-mcp` after running `npm run build`.
 
 ### 3. Verify
 
@@ -45,10 +57,7 @@ Restart your MCP client. The following tools should appear:
 
 | Tool | Description |
 |------|-------------|
-| `web_searchkit_search` | Search with reranking |
-| `web_searchkit_research` | Checkpointed research |
-| `web_searchkit_extract` | Page extraction |
-| `web_searchkit_status` | Health check |
+| `web_searchkit_search` | Search with rerank strategy versions and optional citations |
 
 ## Environment variables
 
@@ -65,8 +74,6 @@ Once configured, your agent can call:
 ```
 web_searchkit_search(query="TypeScript 5.5 new features", mode="official-docs")
 web_searchkit_search(query="Redis vs Valkey benchmark", category="it")
-web_searchkit_research(query="AI agent frameworks comparison 2026")
-web_searchkit_extract(url="https://example.com/article")
 ```
 
 ## Troubleshooting

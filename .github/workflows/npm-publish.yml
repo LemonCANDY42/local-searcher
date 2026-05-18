@@ -1,0 +1,49 @@
+name: Publish npm package
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Test
+        run: npm test
+
+      - name: MCP smoke test
+        run: npm run test:mcp
+
+      - name: Bin help smoke test
+        run: |
+          node bin/agent-searchkit-search --help
+          node bin/agent-searchkit-research --help
+          node bin/agent-searchkit-mcp --help
+
+      - name: Rollout contract
+        run: npm run test:rollout
+
+      - name: Publish
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

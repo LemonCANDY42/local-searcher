@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import manifest from "../openclaw.plugin.json" with { type: "json" };
 
-import { __test } from "./index.ts";
+import plugin, { __test } from "./index.ts";
 
 function makeResult(overrides = {}) {
   return {
@@ -2284,4 +2284,23 @@ test("v2.0 troubleshooting precision lock protects canonical docs against issue-
   assert.ok(reranked.findIndex((result) => result.host === "github.com") > 0);
   assert.ok(reranked.findIndex((result) => result.host === "deepwiki.com") > 0);
   assert.ok((reranked[0].sourceFitScore ?? 0) > (reranked[1].sourceFitScore ?? 0));
+});
+
+test("OpenClaw provider exposes structured citation controls", () => {
+  let provider;
+  plugin.register({
+    registerTool() {},
+    registerWebSearchProvider(candidate) {
+      provider = candidate;
+    },
+    config: {},
+  });
+
+  assert.equal(provider?.id, "agent-searchkit");
+
+  const tool = provider.createTool();
+  assert.equal(tool.parameters.properties.citations.description, "Include numbered citation metadata on each result. Default: true.");
+  assert.deepEqual(tool.parameters.properties.mode.enum, ["auto", "general", "official-docs", "github", "models", "packages"]);
+  assert.deepEqual(tool.parameters.properties.rerankVersion.enum, manifest.configSchema.properties.defaultRerankVersion.enum);
+  assert.match(tool.description, /citation metadata/);
 });

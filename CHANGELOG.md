@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.7 (2026-05-18)
+
+### Changed
+
+- Enhance the OpenClaw `web_search` provider adapter with citation-aware structured output, including `citation`, `sources`, `rank`, `publishedDate`, rerank metadata, and optional `mode` / `rerankVersion` controls.
+- Clarify Quickstart setup for OpenClaw, MCP, and other agent/CLI integrations.
+- Replace the misleading reranking-pipeline wording with mutually exclusive rerank strategy versions, and document how benchmark runs compare those versions.
+- Replace old low-level CLI names with project-named commands (`agent-searchkit-search`, `agent-searchkit-research`) and clarify that CLI examples are direct SearXNG smoke tests rather than the OpenClaw provider path.
+- Add a real `agent-searchkit-mcp` npm bin, MCP smoke test, CI workflow, and release-triggered npm publish workflow.
+
 ## 0.3.6 (2026-05-17)
 
 ### Fixed
@@ -45,7 +55,7 @@
 
 ### Features
 
-- `web_searchkit_search` — SearXNG search with 7-version reranking pipeline (v1.0–v2.0)
+- `web_searchkit_search` — SearXNG search with selectable rerank strategy versions (v1.0–v2.0)
 - `web_searchkit_research` — Checkpointed research runs with `search.json` + `report.md`
 - `web_searchkit_extract` — Page extraction with fetch + Playwright fallback
 - `web_searchkit_status` — Stack health check

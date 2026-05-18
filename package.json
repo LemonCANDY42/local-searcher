@@ -1,6 +1,6 @@
 {
   "name": "agent-searchkit",
-  "version": "0.3.6",
+  "version": "0.3.7",
   "description": "Local-first SearXNG search + reranking + research pipelines for AI agents. Framework-agnostic.",
   "type": "module",
   "license": "MIT",
@@ -9,7 +9,10 @@
     "url": "https://github.com/LemonCANDY42/agent-searchkit"
   },
   "scripts": {
-    "build": "esbuild src/index.ts --bundle --platform=node --format=esm --outfile=dist/index.js --external:openclaw --external:node-llama-cpp"
+    "build": "esbuild src/index.ts --bundle --platform=node --format=esm --outfile=dist/index.js --external:openclaw --external:node-llama-cpp",
+    "test": "node src/index.test.mjs && node scripts/lib/search-benchmark-core.test.mjs",
+    "test:mcp": "node scripts/smoke-mcp.mjs",
+    "test:rollout": "node scripts/validate-agent-searchkit-rollout.mjs"
   },
   "keywords": [
     "searxng",
@@ -20,6 +23,20 @@
     "mcp",
     "local-first",
     "research-pipeline"
+  ],
+  "files": [
+    "bin/",
+    "dist/",
+    "docs/",
+    "openclaw.plugin.json",
+    "scripts/",
+    "services/",
+    "!services/.env.local",
+    "skills/",
+    "src/",
+    "CHANGELOG.md",
+    "LICENSE",
+    "README.md"
   ],
   "openclaw": {
     "extensions": [
@@ -39,5 +56,10 @@
   },
   "devDependencies": {
     "esbuild": "^0.28.0"
+  },
+  "bin": {
+    "agent-searchkit-search": "./bin/agent-searchkit-search",
+    "agent-searchkit-research": "./bin/agent-searchkit-research",
+    "agent-searchkit-mcp": "./bin/agent-searchkit-mcp"
   }
 }

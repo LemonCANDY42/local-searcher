@@ -31,27 +31,26 @@ WEB_SEARCHER_PATH = "/path/to/agent-searchkit"
 
 class SearchInput(BaseModel):
     query: str = Field(description="Search query")
-    mode: str = Field(default="auto", description="Search mode: auto|general|official-docs|github|models|packages")
 
 class ResearchInput(BaseModel):
     query: str = Field(description="Research query")
 
 class WebSearchTool(BaseTool):
     name: str = "web_search"
-    description: str = "Search the web locally with reranking. Returns titles, URLs, and snippets."
+    description: str = "Search the web locally through SearXNG. Returns titles, URLs, and snippets."
     args_schema: type[BaseModel] = SearchInput
 
-    def _run(self, query: str, mode: str = "auto") -> str:
+    def _run(self, query: str) -> str:
         result = subprocess.run(
-            [f"{WEB_SEARCHER_PATH}/bin/searx-search", "--json", "-n", "8", "-m", mode, query],
+            [f"{WEB_SEARCHER_PATH}/bin/agent-searchkit-search", "--json", "-n", "8", query],
             capture_output=True, text=True, timeout=30,
         )
         if result.returncode != 0:
             return f"Search failed: {result.stderr}"
         results = json.loads(result.stdout)
         return "\n".join(
-            f"[{r['rank']}] {r['title']}\n    {r['url']}\n    {r['snippet']}"
-            for r in results
+            f"[{i}] {r['title']}\n    {r['url']}\n    {r.get('content', '')}"
+            for i, r in enumerate(results.get("results", []), 1)
         )
 
 class WebResearchTool(BaseTool):
@@ -61,7 +60,7 @@ class WebResearchTool(BaseTool):
 
     def _run(self, query: str) -> str:
         result = subprocess.run(
-            [f"{WEB_SEARCHER_PATH}/bin/research-run", "-n", "12", query],
+            [f"{WEB_SEARCHER_PATH}/bin/agent-searchkit-research", "-n", "12", query],
             capture_output=True, text=True, timeout=120,
         )
         return result.stdout.strip()
@@ -91,6 +90,5 @@ result = crew.kickoff()
 
 ## Tips
 
-- Use `mode="official-docs"` when the agent needs authoritative documentation
-- Use `mode="github"` when looking for code repositories
-- For Chinese queries, pass `language="zh-CN"` in the tool config
+- The CLI integration above is a direct SearXNG wrapper; use the MCP server when the agent needs rerank modes, citation metadata, or `rerankVersion` control.
+- For Chinese queries, add `-l zh-CN` to the subprocess command or expose language as a tool argument.

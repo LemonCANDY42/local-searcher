@@ -1,0 +1,166 @@
+#!/usr/bin/env node
+import { spawnSync } from 'node:child_process';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const runsRoot = path.join(root, 'runs');
+const searchPath = path.join(root, 'bin', 'agent-searchkit-search');
+
+function printHelp() {
+  console.log([
+    'usage: agent-searchkit-research [options] query...',
+    '',
+    'Run local research search and checkpoint results to disk.',
+    '',
+    'Options:',
+    '  -c, --category <category>   SearXNG category (default: general)',
+    '  -n, --limit <number>        max results to save (default: 8)',
+    '  -l, --language <language>   language code (default: en-US)',
+    '  --note <text>               optional note stored in report metadata',
+    '  -h, --help                  show this help message and exit',
+  ].join('\n'));
+}
+
+function takeValue(args, index, flag) {
+  const value = args[index + 1];
+  if (!value || value.startsWith('-')) throw new Error(flag + ' requires a value');
+  return value;
+}
+
+function parseArgs(argv) {
+  const out = {
+    category: 'general',
+    limit: 8,
+    language: 'en-US',
+    note: '',
+    queryParts: [],
+  };
+
+  for (let i = 0; i < argv.length; i += 1) {
+    const arg = argv[i];
+    if (arg === '-h' || arg === '--help') {
+      out.help = true;
+    } else if (arg === '-c' || arg === '--category') {
+      out.category = takeValue(argv, i, arg);
+      i += 1;
+    } else if (arg === '-n' || arg === '--limit') {
+      out.limit = Number.parseInt(takeValue(argv, i, arg), 10);
+      i += 1;
+    } else if (arg === '-l' || arg === '--language') {
+      out.language = takeValue(argv, i, arg);
+      i += 1;
+    } else if (arg === '--note') {
+      out.note = takeValue(argv, i, arg);
+      i += 1;
+    } else if (arg.startsWith('-')) {
+      throw new Error('unknown option: ' + arg);
+    } else {
+      out.queryParts.push(arg);
+    }
+  }
+
+  if (!Number.isFinite(out.limit) || out.limit < 1) throw new Error('--limit must be a positive number');
+  return out;
+}
+
+function slugify(text) {
+  const slug = text
+    .toLowerCase()
+    .replace(/[^a-z0-9 _-]+/g, '')
+    .replace(/[ _-]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80);
+  return slug || 'query';
+}
+
+function compactTimestamp(date) {
+  return date.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z');
+}
+
+function runSearch(args, query) {
+  const result = spawnSync(process.execPath, [
+    searchPath,
+    '--json',
+    '-c', args.category,
+    '-n', String(args.limit),
+    '-l', args.language,
+    query,
+  ], { encoding: 'utf8' });
+
+  if (result.status !== 0) {
+    throw new Error((result.stderr || result.stdout || 'search failed with status ' + result.status).trim());
+  }
+  return JSON.parse(result.stdout);
+}
+
+function renderReport(payload) {
+  const lines = [
+    '# Research Run: ' + payload.query,
+    '',
+    '- Run ID: ' + payload.runId,
+    '- Created: ' + payload.createdAt,
+    '- Category: ' + payload.category,
+    '- Language: ' + payload.language,
+    '- Result count: ' + payload.resultCount,
+  ];
+  if (payload.note) lines.push('- Note: ' + payload.note);
+  if (payload.unresponsiveEngines.length) lines.push('- Unresponsive engines: ' + payload.unresponsiveEngines.join(', '));
+  lines.push('', '## Results', '');
+
+  if (!payload.results.length) {
+    lines.push('_No results returned._');
+  } else {
+    payload.results.forEach((item, index) => {
+      lines.push(String(index + 1) + '. [' + (item.title || '(untitled)') + '](' + (item.url || '') + ')');
+      const meta = [];
+      if (item.engine) meta.push('engine=' + item.engine);
+      if (item.category) meta.push('category=' + item.category);
+      if (item.publishedDate) meta.push('published=' + item.publishedDate);
+      if (meta.length) lines.push('   - ' + meta.join(' | '));
+      if (item.content) lines.push('   - ' + item.content.slice(0, 400));
+      lines.push('');
+    });
+  }
+
+  return lines.join('\n');
+}
+
+async function main() {
+  const args = parseArgs(process.argv.slice(2));
+  if (args.help) {
+    printHelp();
+    return;
+  }
+
+  const query = args.queryParts.join(' ').trim();
+  if (!query) throw new Error('query is required');
+
+  const now = new Date();
+  const runId = compactTimestamp(now) + '-' + slugify(query);
+  const runDir = path.join(runsRoot, runId);
+  await fs.mkdir(runDir, { recursive: true });
+
+  const search = runSearch(args, query);
+  const payload = {
+    runId,
+    createdAt: now.toISOString(),
+    query,
+    category: args.category,
+    language: args.language,
+    note: args.note,
+    resultCount: search.resultCount || 0,
+    unresponsiveEngines: Array.isArray(search.unresponsiveEngines) ? search.unresponsiveEngines : [],
+    results: Array.isArray(search.results) ? search.results : [],
+  };
+
+  await fs.writeFile(path.join(runDir, 'search.json'), JSON.stringify(payload, null, 2) + '\n', 'utf8');
+  await fs.writeFile(path.join(runDir, 'report.md'), renderReport(payload), 'utf8');
+  console.log(runDir);
+}
+
+main().catch((error) => {
+  console.error(error instanceof Error ? error.message : String(error));
+  process.exit(1);
+});

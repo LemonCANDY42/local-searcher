@@ -2,7 +2,7 @@
 
 ## What this does
 
-Integrates agent-searchkit as a LangChain Tool, giving your LangChain agent local search capabilities with reranking.
+Integrates agent-searchkit as a LangChain Tool, giving your LangChain agent local SearXNG search capabilities.
 
 ## Prerequisites
 
@@ -28,14 +28,13 @@ from langchain.tools import Tool
 
 WEB_SEARCHER_PATH = "/path/to/agent-searchkit"
 
-def local_search(query: str, limit: int = 8, mode: str = "auto") -> list[dict]:
+def local_search(query: str, limit: int = 8) -> list[dict]:
     """Search using agent-searchkit CLI."""
     result = subprocess.run(
         [
-            f"{WEB_SEARCHER_PATH}/bin/searx-search",
+            f"{WEB_SEARCHER_PATH}/bin/agent-searchkit-search",
             "--json",
             "-n", str(limit),
-            "-m", mode,
             query,
         ],
         capture_output=True,
@@ -50,7 +49,7 @@ def local_research(query: str, limit: int = 12) -> str:
     """Run a research session and save results to disk."""
     result = subprocess.run(
         [
-            f"{WEB_SEARCHER_PATH}/bin/research-run",
+            f"{WEB_SEARCHER_PATH}/bin/agent-searchkit-research",
             "-n", str(limit),
             query,
         ],
@@ -65,10 +64,9 @@ search_tool = Tool(
     name="local_search",
     func=local_search,
     description=(
-        "Search the web locally with reranking. "
+        "Search the web locally through SearXNG. "
         "Input: search query string. "
-        "Optional kwargs: limit (int), mode (auto|general|official-docs|github|models|packages). "
-        "Returns: list of {title, url, snippet, score, rank} objects."
+        "Returns: normalized JSON with query, resultCount, unresponsiveEngines, and results."
     ),
 )
 
@@ -119,7 +117,6 @@ result = agent.invoke({"messages": [("user", "Find the latest Python 3.14 releas
 |-----------|------|---------|-------------|
 | query | str | required | Search query |
 | limit | int | 8 | Max results |
-| mode | str | auto | Search mode |
 
 ### local_research
 

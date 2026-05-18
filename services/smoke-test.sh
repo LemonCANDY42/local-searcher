@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 ENV_FILE="$ROOT/.env.local"
-WORKSPACE_ROOT="$(cd "$ROOT/../.." && pwd)"
+REPO_ROOT="$(cd "$ROOT/.." && pwd)"
 
 if [[ ! -f "$ENV_FILE" ]]; then
   echo "Missing $ENV_FILE"
@@ -43,8 +43,12 @@ curl -fsS "http://127.0.0.1:${NTFY_PORT}/v1/health"
 
 echo
 echo "==> agent-searchkit plugin unit tests"
-node --test "$WORKSPACE_ROOT/.openclaw/extensions/agent-searchkit/index.test.mjs"
+(cd "$REPO_ROOT" && npm test)
+
+echo
+echo "==> agent-searchkit MCP smoke"
+(cd "$REPO_ROOT" && npm run test:mcp)
 
 echo
 echo "==> agent-searchkit rollout contract"
-node "$ROOT/scripts/validate-agent-searchkit-rollout.mjs"
+node "$REPO_ROOT/scripts/validate-agent-searchkit-rollout.mjs"

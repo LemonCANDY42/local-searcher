@@ -1,0 +1,147 @@
+#!/usr/bin/env node
+import path from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const distPath = path.join(__dirname, '..', 'dist', 'index.js');
+const serverVersion = '0.3.7';
+const pluginModulePromise = import(pathToFileURL(distPath).href);
+
+function normalizeSearxngBaseUrl(value) {
+  const base = (value || 'http://127.0.0.1:8888').replace(/\/+$/, '');
+  return base.endsWith('/search') ? base.slice(0, -'/search'.length) : base;
+}
+
+async function runSearch(args) {
+  const query = String(args?.query || '').trim();
+  if (!query) throw new Error('query is required');
+  const { runAgentSearchkitSearch } = await pluginModulePromise;
+  if (typeof runAgentSearchkitSearch !== 'function') throw new Error('dist/index.js does not export runAgentSearchkitSearch; run npm run build');
+  return await runAgentSearchkitSearch({
+    searxngBaseUrl: normalizeSearxngBaseUrl(process.env.SEARXNG_BASE_URL),
+    defaultLanguage: process.env.DEFAULT_LANGUAGE || 'en-US',
+    defaultLimit: Number.parseInt(process.env.DEFAULT_LIMIT || '8', 10),
+    defaultMode: process.env.DEFAULT_MODE || 'auto',
+    defaultRerankVersion: process.env.DEFAULT_RERANK_VERSION || 'v1.4',
+    rerankEnabled: process.env.RERANK_ENABLED !== 'false',
+    fetchTimeoutMs: Number.parseInt(process.env.FETCH_TIMEOUT_MS || '20000', 10),
+    browserTimeoutMs: Number.parseInt(process.env.BROWSER_TIMEOUT_MS || '45000', 10),
+    maxTextChars: Number.parseInt(process.env.MAX_TEXT_CHARS || '12000', 10),
+    maxLinks: Number.parseInt(process.env.MAX_LINKS || '24', 10),
+    ntfyBaseUrl: process.env.NTFY_BASE_URL || 'http://127.0.0.1:18082',
+    embeddingModelPath: process.env.EMBEDDING_MODEL_PATH,
+  }, {
+    query,
+    limit: typeof args?.limit === 'number' ? args.limit : typeof args?.count === 'number' ? args.count : undefined,
+    category: typeof args?.category === 'string' ? args.category : undefined,
+    language: typeof args?.language === 'string' ? args.language : undefined,
+    safeSearch: typeof args?.safeSearch === 'number' ? args.safeSearch : undefined,
+    mode: typeof args?.mode === 'string' ? args.mode : undefined,
+    rerankVersion: typeof args?.rerankVersion === 'string' ? args.rerankVersion : undefined,
+    citations: typeof args?.citations === 'boolean' ? args.citations : true,
+  });
+}
+
+function writeMessage(message) {
+  const body = JSON.stringify(message);
+  process.stdout.write(`Content-Length: ${Buffer.byteLength(body, 'utf8')}\r\n\r\n${body}`);
+}
+
+function result(id, payload) {
+  writeMessage({ jsonrpc: '2.0', id, result: payload });
+}
+
+function errorResult(id, code, message) {
+  writeMessage({ jsonrpc: '2.0', id, error: { code, message } });
+}
+
+const tools = [
+  {
+    name: 'web_searchkit_search',
+    description: 'Search local SearXNG through agent-searchkit and return normalized JSON results.',
+    inputSchema: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        query: { type: 'string', description: 'Search query.' },
+        limit: { type: 'number', minimum: 1, maximum: 20, description: 'Maximum results to return.' },
+        count: { type: 'number', minimum: 1, maximum: 20, description: 'Alias for limit.' },
+        category: { type: 'string', description: 'SearXNG category such as general, news, images, videos, it.' },
+        language: { type: 'string', description: 'Language code such as en-US or zh-CN.' },
+        safeSearch: { type: 'number', enum: [0, 1, 2], description: '0=off, 1=moderate, 2=strict.' },
+        mode: { type: 'string', enum: ['auto', 'general', 'official-docs', 'github', 'models', 'packages'] },
+        rerankVersion: { type: 'string', enum: ['v1.0', 'v1.1', 'v1.2', 'v1.3', 'v1.4', 'v1.5', 'v2.0'] },
+        citations: { type: 'boolean', description: 'Include numbered citation metadata. Default: true.' }
+      },
+      required: ['query']
+    }
+  }
+];
+
+async function handle(message) {
+  if (!message || typeof message !== 'object') return;
+  const { id, method, params } = message;
+  try {
+    if (method === 'initialize') {
+      result(id, {
+        protocolVersion: params?.protocolVersion || '2024-11-05',
+        capabilities: { tools: {} },
+        serverInfo: { name: 'agent-searchkit', version: serverVersion }
+      });
+      return;
+    }
+    if (method === 'notifications/initialized') return;
+    if (method === 'tools/list') {
+      result(id, { tools });
+      return;
+    }
+    if (method === 'tools/call') {
+      const name = params?.name;
+      if (name !== 'web_searchkit_search') throw new Error(`Unknown tool: ${name}`);
+      const structuredContent = await runSearch(params?.arguments || {});
+      result(id, {
+        content: [{ type: 'text', text: JSON.stringify(structuredContent, null, 2) }],
+        structuredContent
+      });
+      return;
+    }
+    if (id !== undefined) errorResult(id, -32601, `Method not found: ${method}`);
+  } catch (error) {
+    errorResult(id, -32000, error instanceof Error ? error.message : String(error));
+  }
+}
+
+function readContentLengthFrame() {
+  const headerEnd = inputBuffer.indexOf('\r\n\r\n');
+  if (headerEnd < 0) return null;
+  const header = inputBuffer.slice(0, headerEnd).toString('utf8');
+  const match = /^Content-Length:\s*(\d+)\s*$/im.exec(header);
+  if (!match) throw new Error('Missing Content-Length header');
+  const length = Number.parseInt(match[1], 10);
+  const bodyStart = headerEnd + 4;
+  const bodyEnd = bodyStart + length;
+  if (inputBuffer.length < bodyEnd) return null;
+  const body = inputBuffer.slice(bodyStart, bodyEnd).toString('utf8');
+  inputBuffer = inputBuffer.slice(bodyEnd);
+  return JSON.parse(body);
+}
+
+if (process.argv.includes('--help') || process.argv.includes('-h')) {
+  console.log('usage: agent-searchkit-mcp\n\nMCP stdio server. Set SEARXNG_BASE_URL to your SearXNG base URL, default http://127.0.0.1:8888.');
+  process.exit(0);
+}
+
+let inputBuffer = Buffer.alloc(0);
+process.stdin.on('data', (chunk) => {
+  inputBuffer = Buffer.concat([inputBuffer, chunk]);
+  try {
+    let message;
+    while ((message = readContentLengthFrame()) !== null) {
+      void handle(message);
+    }
+  } catch (error) {
+    inputBuffer = Buffer.alloc(0);
+    errorResult(null, -32700, error instanceof Error ? error.message : String(error));
+  }
+});
+process.stdin.resume();

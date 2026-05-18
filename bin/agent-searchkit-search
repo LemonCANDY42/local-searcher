@@ -1,0 +1,173 @@
+#!/usr/bin/env node
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+function printHelp() {
+  console.log([
+    'usage: agent-searchkit-search [options] query...',
+    '',
+    'Query local SearXNG and print normalized results.',
+    '',
+    'Options:',
+    '  -n, --limit <number>        max results to print (default: 8)',
+    '  -c, --category <category>   optional SearXNG category',
+    '  -l, --language <language>   language code (default: en-US)',
+    '  --json                      print normalized JSON instead of pretty text',
+    '  --safe-search <0|1|2>       0=off 1=moderate 2=strict (default: 1)',
+    '  --base-url <url>            SearXNG search endpoint (default: http://127.0.0.1:8888/search)',
+    '  -h, --help                  show this help message and exit',
+  ].join('\n'));
+}
+
+function takeValue(args, index, flag) {
+  const value = args[index + 1];
+  if (!value || value.startsWith('-')) {
+    throw new Error(flag + ' requires a value');
+  }
+  return value;
+}
+
+function parseArgs(argv) {
+  const out = {
+    limit: 8,
+    category: undefined,
+    language: 'en-US',
+    json: false,
+    safeSearch: 1,
+    baseUrl: 'http://127.0.0.1:8888/search',
+    queryParts: [],
+  };
+
+  for (let i = 0; i < argv.length; i += 1) {
+    const arg = argv[i];
+    if (arg === '-h' || arg === '--help') {
+      out.help = true;
+    } else if (arg === '--json') {
+      out.json = true;
+    } else if (arg === '-n' || arg === '--limit') {
+      out.limit = Number.parseInt(takeValue(argv, i, arg), 10);
+      i += 1;
+    } else if (arg === '-c' || arg === '--category') {
+      out.category = takeValue(argv, i, arg);
+      i += 1;
+    } else if (arg === '-l' || arg === '--language') {
+      out.language = takeValue(argv, i, arg);
+      i += 1;
+    } else if (arg === '--safe-search') {
+      out.safeSearch = Number.parseInt(takeValue(argv, i, arg), 10);
+      i += 1;
+    } else if (arg === '--base-url') {
+      out.baseUrl = takeValue(argv, i, arg);
+      i += 1;
+    } else if (arg.startsWith('-')) {
+      throw new Error('unknown option: ' + arg);
+    } else {
+      out.queryParts.push(arg);
+    }
+  }
+
+  if (!Number.isFinite(out.limit) || out.limit < 1) throw new Error('--limit must be a positive number');
+  if (![0, 1, 2].includes(out.safeSearch)) throw new Error('--safe-search must be 0, 1, or 2');
+  return out;
+}
+
+function buildUrl(base, query, category, language, safeSearch) {
+  const url = new URL(base);
+  url.searchParams.set('q', query);
+  url.searchParams.set('format', 'json');
+  url.searchParams.set('language', language);
+  url.searchParams.set('safesearch', String(safeSearch));
+  if (category) url.searchParams.set('categories', category);
+  return url;
+}
+
+async function fetchJson(url) {
+  let lastError;
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 20000);
+      const response = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeout);
+      if (!response.ok) throw new Error(String(response.status) + ' ' + response.statusText);
+      return await response.json();
+    } catch (error) {
+      lastError = error;
+      if (attempt === 3) break;
+      await sleep(1200 * (attempt + 1));
+    }
+  }
+  throw lastError || new Error('failed to fetch search results');
+}
+
+function normalizeUnresponsive(items) {
+  if (!Array.isArray(items)) return [];
+  return items.map((item) => {
+    if (typeof item === 'string') return item;
+    if (Array.isArray(item)) return item.filter((value) => value != null).map(String).join('/');
+    return String(item);
+  });
+}
+
+function normalizeResult(item) {
+  return {
+    title: String(item?.title || '').replace(/\n/g, ' ').trim(),
+    url: String(item?.url || '').trim(),
+    content: String(item?.content || '').replace(/\n/g, ' ').trim(),
+    category: item?.category,
+    engine: item?.engine || item?.engines,
+    publishedDate: item?.publishedDate,
+  };
+}
+
+async function main() {
+  const args = parseArgs(process.argv.slice(2));
+  if (args.help) {
+    printHelp();
+    return;
+  }
+
+  const query = args.queryParts.join(' ').trim();
+  if (!query) throw new Error('query is required');
+
+  const data = await fetchJson(buildUrl(args.baseUrl, query, args.category, args.language, args.safeSearch));
+  const results = Array.isArray(data?.results) ? data.results.slice(0, args.limit).map(normalizeResult) : [];
+  const payload = {
+    query,
+    category: args.category,
+    language: args.language,
+    resultCount: results.length,
+    unresponsiveEngines: normalizeUnresponsive(data?.unresponsive_engines),
+    results,
+  };
+
+  if (args.json) {
+    console.log(JSON.stringify(payload, null, 2));
+    return;
+  }
+
+  if (!results.length) {
+    console.log('No results for: ' + query);
+    if (payload.unresponsiveEngines.length) console.log('Unresponsive engines: ' + payload.unresponsiveEngines.join(', '));
+    return;
+  }
+
+  results.forEach((item, index) => {
+    console.log(String(index + 1) + '. ' + item.title);
+    if (item.url) console.log('   ' + item.url);
+    const meta = [];
+    if (item.category) meta.push('category=' + item.category);
+    if (item.engine) meta.push('engine=' + item.engine);
+    if (item.publishedDate) meta.push('published=' + item.publishedDate);
+    if (meta.length) console.log('   ' + meta.join(' | '));
+    if (item.content) console.log('   ' + item.content.slice(0, 260));
+  });
+
+  if (payload.unresponsiveEngines.length) {
+    console.log('\nUnresponsive engines: ' + payload.unresponsiveEngines.join(', '));
+  }
+}
+
+main().catch((error) => {
+  console.error(error instanceof Error ? error.message : String(error));
+  process.exit(1);
+});

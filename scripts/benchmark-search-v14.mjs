@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { performance } from 'node:perf_hooks';
-import { __test } from '../../../.openclaw/extensions/agent-searchkit/index.ts';
+import { __test } from '../src/index.ts';
 import {
   aggregatePackMetrics,
   aggregateVersionMetrics,
@@ -41,7 +41,7 @@ const DEFAULT_SEED = 'agent-searchkit-benchmark';
 const DEFAULT_RESULT_LIMIT = 8;
 
 const cfg = {
-  searxngBaseUrl: 'http://127.0.0.1:18080',
+  searxngBaseUrl: process.env.SEARXNG_BASE_URL || 'http://127.0.0.1:8888',
   fetchTimeoutMs: 20000,
   defaultLanguage: 'en-US',
   defaultLimit: DEFAULT_RESULT_LIMIT,

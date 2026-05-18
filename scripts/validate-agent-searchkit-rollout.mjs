@@ -5,11 +5,10 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
-const workspaceDir = path.resolve(scriptDir, "../../..");
-const pluginDir = path.join(workspaceDir, ".openclaw", "extensions", "agent-searchkit");
+const pluginDir = path.resolve(scriptDir, "..");
 
 const [{ default: plugin, __test }, manifest] = await Promise.all([
-  import(pathToFileURL(path.join(pluginDir, "index.ts")).href),
+  import(pathToFileURL(path.join(pluginDir, "src", "index.ts")).href),
   fs.readFile(path.join(pluginDir, "openclaw.plugin.json"), "utf8").then((raw) => JSON.parse(raw)),
 ]);
 
@@ -31,7 +30,9 @@ assert.equal(
 );
 
 const openclawConfigPath = path.join(os.homedir(), ".openclaw", "openclaw.json");
-const openclawConfig = JSON.parse(await fs.readFile(openclawConfigPath, "utf8"));
+const openclawConfig = await fs.readFile(openclawConfigPath, "utf8")
+  .then((raw) => JSON.parse(raw))
+  .catch(() => ({}));
 const pluginConfig = openclawConfig?.plugins?.entries?.["agent-searchkit"]?.config ?? {};
 const configuredDefault = pluginConfig.defaultRerankVersion ?? runtimeDefault;
 
@@ -48,6 +49,7 @@ plugin.register({
   registerTool(tool) {
     tools.set(tool.name, tool);
   },
+  registerWebSearchProvider() {},
 });
 
 const statusTool = tools.get("web_searchkit_status");

@@ -14,7 +14,7 @@ function isSupportedRerankVersion(value) {
 
 // src/index.ts
 var DEFAULTS = {
-  searxngBaseUrl: "http://127.0.0.1:18080",
+  searxngBaseUrl: "http://127.0.0.1:8888",
   ntfyBaseUrl: "http://127.0.0.1:18082",
   defaultLanguage: "en-US",
   defaultLimit: 8,
@@ -3794,6 +3794,9 @@ async function detectLegacyContainers() {
     return [];
   }
 }
+async function runAgentSearchkitSearch(cfg, params) {
+  return await searchSearxng(cfg, params);
+}
 var plugin = {
   id: "agent-searchkit",
   name: "Agent Searchkit",
@@ -4108,14 +4111,17 @@ var plugin = {
         configTarget.plugins.entries["agent-searchkit"].config.searxngBaseUrl = value;
       },
       createTool: () => ({
-        description: "Search the web using Agent Searchkit: self-hosted SearXNG retrieval plus local reranking.",
+        description: "Search the web using Agent Searchkit: self-hosted SearXNG retrieval plus local reranking. Results include lightweight citation metadata by default.",
         parameters: {
           type: "object",
           additionalProperties: false,
           properties: {
             query: { type: "string", minLength: 1 },
             count: { type: "number", minimum: 1, maximum: 20 },
-            language: { type: "string" }
+            language: { type: "string" },
+            citations: { type: "boolean", description: "Include numbered citation metadata on each result. Default: true." },
+            mode: { type: "string", enum: ["auto", "general", "official-docs", "github", "models", "packages"] },
+            rerankVersion: { type: "string", enum: [...SUPPORTED_RERANK_VERSIONS] }
           },
           required: ["query"]
         },
@@ -4123,20 +4129,32 @@ var plugin = {
           const cfg = resolvePluginCfg(api);
           const limit = typeof args.count === "number" ? Math.min(20, Math.max(1, args.count)) : cfg.defaultLimit;
           const language = typeof args.language === "string" ? args.language : cfg.defaultLanguage;
+          const citations = typeof args.citations === "boolean" ? args.citations : true;
           const result = await searchSearxng(cfg, {
             query: String(args.query ?? ""),
             limit,
             language,
+            mode: typeof args.mode === "string" ? args.mode : void 0,
             rerank: cfg.rerankEnabled,
-            rerankVersion: cfg.defaultRerankVersion
+            rerankVersion: resolveRequestedRerankVersion(args.rerankVersion) ?? cfg.defaultRerankVersion,
+            citations
           });
           return {
+            query: result.query,
+            mode: result.mode,
+            rerankApplied: result.rerankApplied,
+            rerankVersion: result.rerankVersion,
+            citationsEnabled: result.citationsEnabled,
             results: (result.results ?? []).map((r) => ({
+              rank: r.rank,
               title: r.title ?? "",
               url: r.url ?? "",
               snippet: r.snippet ?? "",
-              host: r.host ?? ""
-            }))
+              host: r.host ?? "",
+              publishedDate: r.publishedDate ?? null,
+              citation: r.citation
+            })),
+            sources: citations ? (result.results ?? []).map((r) => r.citation?.formatted).filter((item) => typeof item === "string" && item.length > 0) : void 0
           };
         }
       })
@@ -4179,5 +4197,6 @@ var __test = {
 var index_default = plugin;
 export {
   __test,
-  index_default as default
+  index_default as default,
+  runAgentSearchkitSearch
 };

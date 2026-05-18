@@ -8,7 +8,7 @@ Gives your OpenClaw agent local search, reranking, research pipelines, and page 
 
 ```bash
 # 1. Install the plugin
-openclaw plugins install clawhub:agent-searchkit
+openclaw plugins install clawhub:agent-searchkit --dangerously-force-unsafe-install
 openclaw config set plugins.entries.agent-searchkit.enabled true
 openclaw config set plugins.entries.agent-searchkit.config.searxngBaseUrl "http://127.0.0.1:8888"
 
@@ -23,14 +23,16 @@ After install, agent-searchkit registers as an OpenClaw web-search provider.
 With `tools.web.search.provider: "agent-searchkit"`, the built-in `web_search`
 tool automatically uses SearXNG + reranking — no extra tool calls needed.
 
+OpenClaw may require `--dangerously-force-unsafe-install` because optional page extraction and diagnostics use Node process-spawn APIs. Review the source before installing from an untrusted fork.
+
 ## Verify
 
 ```bash
-# Check plugin loaded
-openclaw status | grep agent-searchkit
+# Check config
+openclaw config get tools.web.search.provider
 
-# Run smoke test
-cd ~/.openclaw/workspace/services/agent-searchkit
+# Run the local SearXNG smoke test from a source checkout
+cd /path/to/agent-searchkit/services
 ./manage.sh test
 ```
 
