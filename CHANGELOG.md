@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.9 (2026-05-18)
+
+### Fixed
+
+- Add LM Studio-specific MCP setup guidance that uses a globally installed absolute `agent-searchkit-mcp` path and avoids the Windows-only `cmd /c` wrapper on macOS/Linux.
+- Report the MCP server version from `package.json` instead of a hard-coded value.
+
 ## 0.3.8 (2026-05-18)
 
 ### Fixed

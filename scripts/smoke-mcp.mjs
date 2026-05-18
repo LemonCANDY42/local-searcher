@@ -1,10 +1,12 @@
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
+import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const serverPath = path.join(root, 'bin', 'agent-searchkit-mcp');
+const packageJson = JSON.parse(await fs.readFile(path.join(root, 'package.json'), 'utf8'));
 
 function encode(message) {
   const body = JSON.stringify(message);
@@ -67,6 +69,7 @@ child.kill();
 
 const init = responses.find((item) => item.id === 1);
 assert.equal(init.result.serverInfo.name, 'agent-searchkit');
+assert.equal(init.result.serverInfo.version, packageJson.version);
 
 const tools = responses.find((item) => item.id === 2).result.tools;
 assert.ok(tools.some((tool) => tool.name === 'web_searchkit_search'));

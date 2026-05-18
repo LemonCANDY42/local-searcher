@@ -1,10 +1,12 @@
 #!/usr/bin/env node
+import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const distPath = path.join(__dirname, '..', 'dist', 'index.js');
-const serverVersion = '0.3.7';
+const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
+const serverVersion = packageJson.version || '0.0.0';
 const pluginModulePromise = import(pathToFileURL(distPath).href);
 
 function normalizeSearxngBaseUrl(value) {

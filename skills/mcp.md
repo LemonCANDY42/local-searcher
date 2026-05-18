@@ -49,6 +49,30 @@ Add to your MCP client config (e.g., `claude_desktop_config.json` or `.cursor/mc
 
 On Windows, use `"command": "cmd"` and `"args": ["/c", "npx", "-y", "--package", "agent-searchkit@latest", "agent-searchkit-mcp"]`.
 
+For LM Studio or other GUI clients on macOS, prefer a global install and an absolute command path to avoid PATH inheritance and first-run npx timeout issues:
+
+```bash
+npm install -g agent-searchkit@latest
+which agent-searchkit-mcp
+agent-searchkit-mcp --help
+```
+
+```json
+{
+  "mcpServers": {
+    "agent-searchkit": {
+      "command": "/opt/homebrew/bin/agent-searchkit-mcp",
+      "args": [],
+      "env": {
+        "SEARXNG_BASE_URL": "http://127.0.0.1:8888"
+      }
+    }
+  }
+}
+```
+
+Do not use the Windows `cmd /c` wrapper on macOS/Linux. If reusing OpenClaw's local SearXNG, set `SEARXNG_BASE_URL` to `http://127.0.0.1:18080`.
+
 For a local checkout, set `command` to `/absolute/path/to/agent-searchkit/bin/agent-searchkit-mcp` after running `npm run build`.
 
 ### 3. Verify
