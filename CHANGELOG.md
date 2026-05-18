@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.11 (2026-05-18)
+
+### Fixed
+
+- Expose `agent-searchkit` as the default npm bin so plain `npx -y agent-searchkit@latest` starts the MCP server.
+- Accept LF-only MCP stdio headers in addition to CRLF headers for more tolerant GUI client handshakes.
+- Simplify MCP setup docs to the package-name `npx` command.
+
 ## 0.3.10 (2026-05-18)
 
 ### Fixed

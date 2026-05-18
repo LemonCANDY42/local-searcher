@@ -90,7 +90,7 @@ openclaw gateway restart
   "mcpServers": {
     "agent-searchkit": {
       "command": "npx",
-      "args": ["-y", "--package", "agent-searchkit@latest", "agent-searchkit-mcp"],
+      "args": ["-y", "agent-searchkit@latest"],
       "env": {
         "SEARXNG_BASE_URL": "http://127.0.0.1:8888"
       }
@@ -102,7 +102,7 @@ openclaw gateway restart
 如果 GUI 客户端首次启动 `npx` 超时，可以先在同一台机器上预热 npm 缓存：
 
 ```bash
-npm exec --yes --package=agent-searchkit@latest -- agent-searchkit-mcp --help
+npx -y agent-searchkit@latest --help
 ```
 
 如果你有自己的 SearXNG，保持 `SEARXNG_BASE_URL` 为它的地址；如果复用 OpenClaw 本地实例，通常改为 `http://127.0.0.1:18080`。
@@ -297,14 +297,14 @@ Use the npm entrypoint in MCP clients:
   "mcpServers": {
     "agent-searchkit": {
       "command": "npx",
-      "args": ["-y", "--package", "agent-searchkit@latest", "agent-searchkit-mcp"],
+      "args": ["-y", "agent-searchkit@latest"],
       "env": { "SEARXNG_BASE_URL": "http://127.0.0.1:8888" }
     }
   }
 }
 ```
 
-If a GUI client times out on first launch, pre-warm the npm cache with `npm exec --yes --package=agent-searchkit@latest -- agent-searchkit-mcp --help`, then restart the client.
+If a GUI client times out on first launch, pre-warm the npm cache with `npx -y agent-searchkit@latest --help`, then restart the client.
 
 ### Python / LangChain
 

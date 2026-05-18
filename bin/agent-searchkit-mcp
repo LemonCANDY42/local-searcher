@@ -119,13 +119,15 @@ async function handle(message) {
 }
 
 function readContentLengthFrame() {
-  const headerEnd = inputBuffer.indexOf('\r\n\r\n');
+  const crlfHeaderEnd = inputBuffer.indexOf('\r\n\r\n');
+  const lfHeaderEnd = inputBuffer.indexOf('\n\n');
+  const headerEnd = crlfHeaderEnd >= 0 ? crlfHeaderEnd : lfHeaderEnd;
   if (headerEnd < 0) return null;
   const header = inputBuffer.slice(0, headerEnd).toString('utf8');
   const match = /^Content-Length:\s*(\d+)\s*$/im.exec(header);
   if (!match) throw new Error('Missing Content-Length header');
   const length = Number.parseInt(match[1], 10);
-  const bodyStart = headerEnd + 4;
+  const bodyStart = headerEnd + (crlfHeaderEnd >= 0 ? 4 : 2);
   const bodyEnd = bodyStart + length;
   if (inputBuffer.length < bodyEnd) return null;
   const body = inputBuffer.slice(bodyStart, bodyEnd).toString('utf8');

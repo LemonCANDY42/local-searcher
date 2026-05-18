@@ -8,6 +8,12 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const serverPath = path.join(root, 'bin', 'agent-searchkit-mcp');
 const packageJson = JSON.parse(await fs.readFile(path.join(root, 'package.json'), 'utf8'));
 
+assert.equal(
+  packageJson.bin?.['agent-searchkit'],
+  'bin/agent-searchkit-mcp',
+  'package must expose the package-name bin so plain npx agent-searchkit@latest starts MCP',
+);
+
 function encode(message) {
   const body = JSON.stringify(message);
   return `Content-Length: ${Buffer.byteLength(body, 'utf8')}\r\n\r\n${body}`;

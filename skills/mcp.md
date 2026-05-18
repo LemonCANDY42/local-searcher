@@ -16,8 +16,7 @@ Exposes agent-searchkit as an MCP (Model Context Protocol) server, usable by any
 For normal MCP client use, prefer npm:
 
 ```bash
-npm install -g agent-searchkit
-agent-searchkit-mcp --help
+npx -y agent-searchkit@latest --help
 ```
 
 For local development:
@@ -38,7 +37,7 @@ Add to your MCP client config (e.g., `claude_desktop_config.json`, `.cursor/mcp.
   "mcpServers": {
     "agent-searchkit": {
       "command": "npx",
-      "args": ["-y", "--package", "agent-searchkit@latest", "agent-searchkit-mcp"],
+      "args": ["-y", "agent-searchkit@latest"],
       "env": {
         "SEARXNG_BASE_URL": "http://127.0.0.1:8888"
       }
@@ -50,7 +49,7 @@ Add to your MCP client config (e.g., `claude_desktop_config.json`, `.cursor/mcp.
 If a GUI client times out on first launch, pre-warm the npm cache from a terminal on the same machine:
 
 ```bash
-npm exec --yes --package=agent-searchkit@latest -- agent-searchkit-mcp --help
+npx -y agent-searchkit@latest --help
 ```
 
 If reusing OpenClaw's local SearXNG, set `SEARXNG_BASE_URL` to `http://127.0.0.1:18080`.

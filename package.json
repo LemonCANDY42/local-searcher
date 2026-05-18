@@ -1,6 +1,6 @@
 {
   "name": "agent-searchkit",
-  "version": "0.3.10",
+  "version": "0.3.11",
   "description": "Local-first SearXNG search + reranking + research pipelines for AI agents. Framework-agnostic.",
   "type": "module",
   "license": "MIT",
@@ -58,6 +58,7 @@
     "esbuild": "^0.28.0"
   },
   "bin": {
+    "agent-searchkit": "bin/agent-searchkit-mcp",
     "agent-searchkit-search": "bin/agent-searchkit-search",
     "agent-searchkit-research": "bin/agent-searchkit-research",
     "agent-searchkit-mcp": "bin/agent-searchkit-mcp"
