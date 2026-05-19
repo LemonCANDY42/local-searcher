@@ -117,6 +117,46 @@ test("Chinese exact entity rerank keeps Musk results above single-character hors
   assert.equal(reranked[0].title, "马斯克最新动向：SpaceX 与特斯拉近期消息");
 });
 
+test("Chinese searches preserve native SearXNG result order instead of independent reranking", async () => {
+  const query = "马斯克 最近 动向 新闻";
+  const ranked = await __test.rankMergedSearchResults(
+    { defaultMode: "general" },
+    {
+      results: [
+        makeResult({
+          title: "马斯克最新动向：SpaceX 与特斯拉近期消息",
+          url: "https://example.com/elon-musk-news",
+          originalRank: 1,
+          score: 0.1,
+        }),
+        makeResult({
+          title: "马：从迷你狐狸进化到高头大马",
+          url: "https://www.forestry.gov.cn/article/horse",
+          host: "www.forestry.gov.cn",
+          path: "/article/horse",
+          originalRank: 2,
+          score: 0.99,
+        }),
+      ],
+      unresponsiveEngines: [],
+      suggestions: [],
+    },
+    {
+      query,
+      category: "general",
+      mode: "general",
+      limit: 2,
+      rerankVersion: "v2.0",
+    },
+  );
+
+  assert.equal(ranked.effectiveRerankVersion, "v1.0");
+  assert.deepEqual(ranked.finalResults.map((result) => result.title), [
+    "马斯克最新动向：SpaceX 与特斯拉近期消息",
+    "马：从迷你狐狸进化到高头大马",
+  ]);
+});
+
 test("agent-aware contract can force official-doc and model intent with small structured fields", () => {
   const releaseIntent = __test.detectQueryIntent(
     "OpenClaw latest notes",

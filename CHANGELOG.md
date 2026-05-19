@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.22 (2026-05-19)
+
+### Changed
+
+- Preserve native SearXNG result order for Chinese/CJK queries instead of applying agent-searchkit's independent reranking layer.
+
 ## 0.3.21 (2026-05-19)
 
 ### Fixed

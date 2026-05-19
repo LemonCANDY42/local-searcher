@@ -792,6 +792,11 @@ function cjkCoreEntityAdjustment(result: SearchResult, intent: SearchIntent) {
   return strength > 0 ? Number((0.22 * strength).toFixed(4)) : -0.34;
 }
 
+function shouldUseNativeSearxngRankingForCjk(queryOrIntent: string | SearchIntent) {
+  const query = typeof queryOrIntent === "string" ? queryOrIntent : queryOrIntent.normalizedQuery;
+  return hasCjkText(query);
+}
+
 function hostMatches(host: string, suffix: string) {
   return host === suffix || host.endsWith(`.${suffix}`);
 }
@@ -2656,7 +2661,7 @@ async function collectSearchCandidates(
   const baselineCategories = resolveQueryCategories(requestedCategory, intent);
   const perCategoryLimit = Math.max(params.limit * 2, 10);
 
-  if (!isRetrievalFirstRerankVersion(params.rerankVersion)) {
+  if (shouldUseNativeSearxngRankingForCjk(intent) || !isRetrievalFirstRerankVersion(params.rerankVersion)) {
     const groups = [] as Array<{ category: SearchCategory; raw: any; results: SearchResult[] }>;
     for (const category of baselineCategories) {
       groups.push(await fetchSearxngCategory(cfg, {
@@ -4884,7 +4889,9 @@ async function rankMergedSearchResults(
   let embeddingInfo: Record<string, unknown> | undefined;
   let adaptiveProfile: AdaptiveHybridProfile | undefined;
 
-  if (params.rerankVersion === "v1.1") {
+  if (shouldUseNativeSearxngRankingForCjk(intent)) {
+    finalResults = baseline;
+  } else if (params.rerankVersion === "v1.1") {
     finalResults = ensureWithinLimit(rerankResultsV11(merged.results, intent, debug), params.limit);
   } else if (params.rerankVersion === "v1.2") {
     const v12 = await rerankResultsV12(cfg, merged.results, intent, debug);
@@ -4934,7 +4941,8 @@ async function rankMergedSearchResults(
     params.rerankVersion === "v1.5" ||
     params.rerankVersion === "v2.0"
   ) && embeddingInfo?.applied === false;
-  const effectiveRerankVersion = embeddingFallback ? "v1.1" : params.rerankVersion;
+  const nativeCjkRanking = shouldUseNativeSearxngRankingForCjk(intent);
+  const effectiveRerankVersion = nativeCjkRanking ? "v1.0" : embeddingFallback ? "v1.1" : params.rerankVersion;
   if (embeddingFallback) {
     finalResults = ensureWithinLimit(rerankResultsV11(merged.results, intent, debug), params.limit);
   }
