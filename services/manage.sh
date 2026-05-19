@@ -19,9 +19,10 @@ wait_for_searxng() {
   source "$ENV_FILE"
   local url="http://127.0.0.1:${SEARXNG_PORT}/search?q=openclaw&format=json&language=en-US"
   local attempts="${1:-20}"
+  local body
   local i
   for ((i=1; i<=attempts; i++)); do
-    if curl -fsS "$url" >/dev/null 2>&1; then
+    if body="$(curl -fsS "$url" 2>/dev/null)" && [[ "$body" == *'"results"'* || "$body" == *'"query"'* ]]; then
       echo "SearXNG ready"
       return 0
     fi

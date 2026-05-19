@@ -35,7 +35,7 @@
 
 ## 📋 Prerequisites
 
-- [Docker](https://docs.docker.com/get-docker/)（用于运行 SearXNG 搜索引擎）
+- [Docker](https://docs.docker.com/get-docker/) with Docker Compose v2（用于运行 SearXNG 搜索引擎）
 - [Node.js](https://nodejs.org/) 18+（用于 CLI 工具和插件）
 
 ---
@@ -44,12 +44,53 @@
 
 ### 1️⃣ 启动 SearXNG
 
-`agent-searchkit` 默认连接本机 SearXNG。下面用 Docker 暴露到 `127.0.0.1:8888`；如果你已经有 SearXNG，例如 OpenClaw 本地服务跑在 `127.0.0.1:18080`，把后续配置里的 URL 改成你的实际地址即可。
+`agent-searchkit` 默认连接本机 SearXNG。仓库内置的服务脚本会用 Docker 启动一套本机 SearXNG，并显式开启 MCP 必需的 JSON 搜索输出。仅启动 SearXNG Web UI 不够；`/search?...format=json` 必须可用。
+
+macOS / Linux:
 
 ```bash
-docker run -d --name searxng -p 127.0.0.1:8888:8080 searxng/searxng
+git clone https://github.com/LemonCANDY42/agent-searchkit.git
+cd agent-searchkit/services
+cp .env.example .env.local
+./manage.sh up
+```
+
+Windows PowerShell:
+
+```powershell
+git clone https://github.com/LemonCANDY42/agent-searchkit.git
+cd agent-searchkit\services
+Copy-Item .env.example .env.local
+.\manage.ps1 up
+```
+
+Manual verification:
+
+```bash
+curl -I http://127.0.0.1:8888/
 curl 'http://127.0.0.1:8888/search?q=openclaw&format=json'
 ```
+
+The second command must return JSON with fields such as `query` or `results`. If it returns `403 Forbidden`, your SearXNG config has not enabled JSON output. The bundled `services/searxng/settings.yml` includes:
+
+```yaml
+search:
+  formats:
+    - html
+    - json
+```
+
+The bundled Docker Compose file mounts this file directly into the container:
+
+```yaml
+./searxng/settings.yml:/etc/searxng/settings.yml:ro
+```
+
+That direct file mount prevents SearXNG from silently generating a default `settings.yml` without JSON support.
+
+Do not replace the bundled file with a minimal `use_default_settings: true` config for MCP usage. The SearXNG default engine set includes engines such as `radio browser` that are unrelated to web search and can fail during startup on fresh Docker caches. The bundled settings keep the engine list focused on web/news/package search and avoid that startup noise.
+
+If you already have SearXNG, for example OpenClaw's local service at `http://127.0.0.1:18080`, you can reuse it as long as its JSON search endpoint passes the same verification command.
 
 ### 2️⃣ 接入 OpenClaw
 
@@ -114,7 +155,7 @@ git clone https://github.com/LemonCANDY42/agent-searchkit.git
 cd agent-searchkit
 npm install
 npm run build
-cd services && cp .env.example .env.local && ./manage.sh up
+cd services && cp .env.example .env.local && ./manage.sh up && ./manage.sh test
 ```
 
 ```json

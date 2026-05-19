@@ -54,14 +54,6 @@ engines:
     display_type: ["infobox"]
     categories: [general]
 
-  - name: wikidata
-    engine: wikidata
-    shortcut: wd
-    timeout: 3.0
-    weight: 2
-    display_type: ["infobox"]
-    categories: [general]
-
   - name: google
     engine: google
     shortcut: go

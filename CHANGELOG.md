@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.12 (2026-05-19)
+
+### Fixed
+
+- Replace the SearXNG quickstart `docker run` example with repository-managed Docker Compose flows for macOS/Linux and Windows PowerShell.
+- Mount the bundled SearXNG `settings.yml` directly so JSON search output is enabled reliably for MCP clients.
+- Add a Windows `services/manage.ps1` helper and document JSON API verification as the readiness check, not just Web UI availability.
+- Keep the bundled SearXNG engine list curated for MCP web search instead of relying on the noisy default engine set.
+
 ## 0.3.11 (2026-05-18)
 
 ### Fixed
