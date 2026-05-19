@@ -482,30 +482,63 @@ function hasCjkText(input) {
 function compactCjkWhitespace(input) {
   return normalizeText(input).replace(/([\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}])\s+(?=[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}])/gu, "$1").replace(/\s+/g, " ").trim();
 }
+function stripTrailingCjkNewsModifiers(input) {
+  let compact = input;
+  let changed = false;
+  for (let index = 0; index < 4; index += 1) {
+    const token = [...CJK_NEWS_MODIFIER_TOKENS].sort((a, b) => b.length - a.length).find((candidate) => compact.endsWith(candidate) && compact.length > candidate.length);
+    if (!token) {
+      break;
+    }
+    compact = compact.slice(0, -token.length);
+    changed = true;
+  }
+  return { value: compact, changed };
+}
+function isCjkNewsModifierPhrase(input) {
+  if (!hasCjkText(input)) {
+    return false;
+  }
+  let rest = input;
+  for (let index = 0; index < 4 && rest.length > 0; index += 1) {
+    const token = [...CJK_NEWS_MODIFIER_TOKENS].sort((a, b) => b.length - a.length).find((candidate) => rest.startsWith(candidate));
+    if (!token) {
+      return false;
+    }
+    rest = rest.slice(token.length);
+  }
+  return rest.length === 0;
+}
 function cjkCoreEntityQuery(input) {
   const parts = normalizeText(input).split(/\s+/g).map((part) => part.trim()).filter(Boolean);
   if (!parts.some(hasCjkText)) {
     return "";
   }
   if (parts.length === 1) {
-    let compact = parts[0];
-    let changed = false;
-    for (let index = 0; index < 4; index += 1) {
-      const token = [...CJK_NEWS_MODIFIER_TOKENS].sort((a, b) => b.length - a.length).find((candidate) => compact.endsWith(candidate) && compact.length > candidate.length);
-      if (!token) {
-        break;
-      }
-      compact = compact.slice(0, -token.length);
-      changed = true;
-    }
-    return changed && compact.length >= 2 ? compact : "";
+    const stripped = stripTrailingCjkNewsModifiers(parts[0]);
+    return stripped.changed && stripped.value.length >= 2 ? stripped.value : "";
   }
-  const kept = parts.filter((part) => !(hasCjkText(part) && CJK_NEWS_MODIFIER_TOKENS.has(part)));
-  if (kept.length === parts.length || kept.length === 0) {
+  let changed = false;
+  const kept = parts.flatMap((part) => {
+    if (!hasCjkText(part)) {
+      return [part];
+    }
+    if (CJK_NEWS_MODIFIER_TOKENS.has(part) || isCjkNewsModifierPhrase(part)) {
+      changed = true;
+      return [];
+    }
+    const stripped = stripTrailingCjkNewsModifiers(part);
+    if (stripped.changed && stripped.value.length >= 2) {
+      changed = true;
+      return [stripped.value];
+    }
+    return [part];
+  });
+  if (!changed || kept.length === 0) {
     return "";
   }
   const joined = kept.join("").trim();
-  return joined.length >= 2 ? joined : "";
+  return changed && joined.length >= 2 ? joined : "";
 }
 function cjkRetrievalSeeds(query, language) {
   const zhLike = language.toLowerCase().startsWith("zh") || hasCjkText(query);

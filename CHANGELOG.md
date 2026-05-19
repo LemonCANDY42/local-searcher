@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.29 (2026-05-19)
+
+### Fixed
+
+- Strip compound Chinese news modifiers such as `最近动向` from spaced CJK queries before calling SearXNG, so `张雪峰 最近动向` is sent as `张雪峰` instead of `张雪峰最近动向`.
+
 ## 0.3.28 (2026-05-19)
 
 ### Fixed

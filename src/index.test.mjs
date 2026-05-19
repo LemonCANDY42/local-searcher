@@ -205,6 +205,57 @@ test("Chinese SearXNG requests prefer core entity queries and force zh-CN langua
   }
 });
 
+test("Chinese compound news modifiers strip to the named entity before SearXNG", async () => {
+  const calls = [];
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (url) => {
+    calls.push(new URL(String(url)));
+    return {
+      ok: true,
+      json: async () => ({
+        results: [
+          {
+            title: "张雪峰最新动向",
+            url: "https://example.com/zhang-xuefeng",
+            content: "张雪峰近期消息",
+          },
+        ],
+      }),
+    };
+  };
+
+  try {
+    const result = await __test.searchSearxng(
+      {
+        searxngBaseUrl: "http://127.0.0.1:8888",
+        defaultLanguage: "zh-CN",
+        defaultLimit: 5,
+        defaultMode: "auto",
+        defaultRerankVersion: "v1.4",
+        rerankEnabled: true,
+        fetchTimeoutMs: 1000,
+      },
+      {
+        query: "张雪峰 最近动向",
+        category: "news",
+        language: "zh-CN",
+        limit: 1,
+        debug: true,
+      },
+    );
+
+    assert.equal(result.rerankVersion, "v1.0");
+    assert.equal(calls[0].searchParams.get("q"), "张雪峰");
+    assert.deepEqual(result.retrieval.queryVariants[0], {
+      query: "张雪峰",
+      categories: ["news"],
+      rationale: ["core-entity-query", "native-searxng-ranking"],
+    });
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test("Chinese compact news-like queries strip trailing modifier phrases before SearXNG", async () => {
   const calls = [];
   const originalFetch = globalThis.fetch;
