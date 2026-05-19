@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.15 (2026-05-19)
+
+### Fixed
+
+- Make the SearXNG settings file mount writable to avoid startup `chown` warnings from current SearXNG images.
+- Trim the default SearXNG engine set to avoid common local-Docker failures from blocked or network-sensitive engines during MCP quickstart searches.
+
 ## 0.3.14 (2026-05-19)
 
 ### Fixed

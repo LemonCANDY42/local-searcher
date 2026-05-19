@@ -19,6 +19,8 @@ search:
 
 server:
   method: "GET"
+  limiter: false
+  public_instance: false
 
 ui:
   default_theme: simple
@@ -54,12 +56,6 @@ engines:
     display_type: ["infobox"]
     categories: [general]
 
-  - name: google
-    engine: google
-    shortcut: go
-    categories: [general]
-    weight: 4
-
   - name: duckduckgo
     engine: duckduckgo
     shortcut: ddg
@@ -71,31 +67,6 @@ engines:
     shortcut: bi
     categories: [general]
     weight: 1
-
-  - name: qwant
-    qwant_categ: web
-    engine: qwant
-    shortcut: qw
-    categories: [general, web]
-    weight: 2
-
-  - name: yahoo
-    engine: yahoo
-    shortcut: yh
-    categories: [general, web]
-    weight: 1
-
-  - name: mojeek
-    shortcut: mjk
-    engine: mojeek
-    categories: [general, web]
-    weight: 1
-
-  - name: google news
-    engine: google_news
-    categories: [news]
-    shortcut: gon
-    weight: 4
 
   - name: duckduckgo news
     engine: duckduckgo_extra
