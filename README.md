@@ -124,16 +124,42 @@ openclaw gateway restart
 
 ### 3️⃣ 接入 MCP 或其他 Agent
 
-对 MCP 客户端，推荐使用 npm 包入口，而不是手写 `path/to/.../src/index.ts`。安装后的 `agent-searchkit-mcp` 是 stdio MCP server，会调用包内 rerank 搜索逻辑；`SEARXNG_BASE_URL` 指向你的本地 SearXNG。
+对 MCP 客户端，`agent-searchkit-mcp` 是 stdio MCP server，会调用包内 rerank 搜索逻辑；`SEARXNG_BASE_URL` 指向你的本地 SearXNG。
 
-**推荐配置（统一用 npm/npx）：**
+**Windows 推荐配置（本地仓库，避开 npm/npx bin shim）：**
+
+```powershell
+git clone https://github.com/LemonCANDY42/agent-searchkit.git
+cd agent-searchkit
+npm install
+npm run build
+node .\bin\agent-searchkit-mcp --help
+```
+
+```json
+{
+  "mcpServers": {
+    "agent-searchkit": {
+      "command": "node",
+      "args": ["D:\\github\\agent-searchkit\\bin\\agent-searchkit-mcp"],
+      "env": {
+        "SEARXNG_BASE_URL": "http://127.0.0.1:8888"
+      }
+    }
+  }
+}
+```
+
+Some Windows npm/npx installs do not expose package bin shims reliably inside GUI-launched MCP clients. The local `node ...\bin\agent-searchkit-mcp` form avoids that PATH/shim layer.
+
+**macOS / Linux npm 配置：**
 
 ```json
 {
   "mcpServers": {
     "agent-searchkit": {
       "command": "npx",
-      "args": ["-y", "agent-searchkit@latest"],
+      "args": ["-y", "agent-searchkit@0.3.18"],
       "env": {
         "SEARXNG_BASE_URL": "http://127.0.0.1:8888"
       }
@@ -145,7 +171,7 @@ openclaw gateway restart
 如果 GUI 客户端首次启动 `npx` 超时，可以先在同一台机器上预热 npm 缓存：
 
 ```bash
-npx -y agent-searchkit@latest --help
+npx -y agent-searchkit@0.3.18 --help
 ```
 
 如果你有自己的 SearXNG，保持 `SEARXNG_BASE_URL` 为它的地址；如果复用 OpenClaw 本地实例，通常改为 `http://127.0.0.1:18080`。
@@ -333,21 +359,35 @@ OpenClaw may warn that the plugin contains high-risk code patterns because the o
 
 ### MCP Server
 
-Use the npm entrypoint in MCP clients:
+On Windows, prefer a local checkout and run the MCP server through `node` to avoid npm/npx bin shim PATH issues:
 
 ```json
 {
   "mcpServers": {
     "agent-searchkit": {
-      "command": "npx",
-      "args": ["-y", "agent-searchkit@latest"],
+      "command": "node",
+      "args": ["D:\\github\\agent-searchkit\\bin\\agent-searchkit-mcp"],
       "env": { "SEARXNG_BASE_URL": "http://127.0.0.1:8888" }
     }
   }
 }
 ```
 
-If a GUI client times out on first launch, pre-warm the npm cache with `npx -y agent-searchkit@latest --help`, then restart the client.
+On macOS / Linux, the npm entrypoint is usually fine:
+
+```json
+{
+  "mcpServers": {
+    "agent-searchkit": {
+      "command": "npx",
+      "args": ["-y", "agent-searchkit@0.3.18"],
+      "env": { "SEARXNG_BASE_URL": "http://127.0.0.1:8888" }
+    }
+  }
+}
+```
+
+If a GUI client times out on first launch, pre-warm the npm cache with `npx -y agent-searchkit@0.3.18 --help`, then restart the client.
 
 ### Python / LangChain
 

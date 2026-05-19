@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.18 (2026-05-19)
+
+### Changed
+
+- Document the Windows MCP setup path as local `node ...\\bin\\agent-searchkit-mcp` instead of relying on npm/npx bin shims that may not be visible to GUI-launched clients.
+
 ## 0.3.17 (2026-05-19)
 
 ### Fixed

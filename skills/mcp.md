@@ -13,31 +13,32 @@ Exposes agent-searchkit as an MCP (Model Context Protocol) server, usable by any
 
 ### 1. Choose an install path
 
-For normal MCP client use, prefer npm:
+For Windows MCP clients, prefer a local checkout and run the bin through `node`; this avoids npm/npx bin shim PATH issues in GUI-launched clients:
 
-```bash
-npx -y agent-searchkit@latest --help
-```
-
-For local development:
-
-```bash
+```powershell
 git clone https://github.com/LemonCANDY42/agent-searchkit.git
 cd agent-searchkit
 npm install
 npm run build
+node .\bin\agent-searchkit-mcp --help
+```
+
+For macOS / Linux MCP clients, npm is usually fine:
+
+```bash
+npx -y agent-searchkit@0.3.18 --help
 ```
 
 ### 2. Configure your MCP client
 
-Add to your MCP client config (e.g., `claude_desktop_config.json`, `.cursor/mcp.json`, or LM Studio's `mcp.json`):
+Add to your MCP client config (e.g., `claude_desktop_config.json`, `.cursor/mcp.json`, or LM Studio's `mcp.json`). Windows local checkout:
 
 ```json
 {
   "mcpServers": {
     "agent-searchkit": {
-      "command": "npx",
-      "args": ["-y", "agent-searchkit@latest"],
+      "command": "node",
+      "args": ["D:\\github\\agent-searchkit\\bin\\agent-searchkit-mcp"],
       "env": {
         "SEARXNG_BASE_URL": "http://127.0.0.1:8888"
       }
@@ -46,15 +47,25 @@ Add to your MCP client config (e.g., `claude_desktop_config.json`, `.cursor/mcp.
 }
 ```
 
-If a GUI client times out on first launch, pre-warm the npm cache from a terminal on the same machine:
+macOS / Linux npm alternative:
 
-```bash
-npx -y agent-searchkit@latest --help
+```json
+{
+  "mcpServers": {
+    "agent-searchkit": {
+      "command": "npx",
+      "args": ["-y", "agent-searchkit@0.3.18"],
+      "env": {
+        "SEARXNG_BASE_URL": "http://127.0.0.1:8888"
+      }
+    }
+  }
+}
 ```
 
 If reusing OpenClaw's local SearXNG, set `SEARXNG_BASE_URL` to `http://127.0.0.1:18080`.
 
-For a local checkout, set `command` to `/absolute/path/to/agent-searchkit/bin/agent-searchkit-mcp` after running `npm run build`.
+For a local checkout on macOS / Linux, set `command` to `/absolute/path/to/agent-searchkit/bin/agent-searchkit-mcp` after running `npm run build`.
 
 ### 3. Verify
 
