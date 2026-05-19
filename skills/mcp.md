@@ -13,7 +13,22 @@ Exposes agent-searchkit as an MCP (Model Context Protocol) server, usable by any
 
 ### 1. Choose an install path
 
-For Windows MCP clients, prefer a local checkout and run the bin through `node`; this avoids npm/npx bin shim PATH issues in GUI-launched clients:
+Standard MCP use does not require a prior global install:
+
+```bash
+npx -y --package agent-searchkit@latest agent-searchkit-mcp --help
+```
+
+For reproducible deployments, pin `agent-searchkit@latest` to a concrete version such as `agent-searchkit@0.3.18`.
+
+If npm/npx bin shims are unreliable on Windows, either install globally:
+
+```powershell
+npm install -g agent-searchkit@latest
+agent-searchkit-mcp --help
+```
+
+or use a local checkout:
 
 ```powershell
 git clone https://github.com/LemonCANDY42/agent-searchkit.git
@@ -23,15 +38,45 @@ npm run build
 node .\bin\agent-searchkit-mcp --help
 ```
 
-For macOS / Linux MCP clients, npm is usually fine:
-
-```bash
-npx -y agent-searchkit@0.3.18 --help
-```
-
 ### 2. Configure your MCP client
 
-Add to your MCP client config (e.g., `claude_desktop_config.json`, `.cursor/mcp.json`, or LM Studio's `mcp.json`). Windows local checkout:
+Add to your MCP client config (e.g., `claude_desktop_config.json`, `.cursor/mcp.json`, or LM Studio's `mcp.json`). Standard config:
+
+```json
+{
+  "mcpServers": {
+    "agent-searchkit": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "--package",
+        "agent-searchkit@latest",
+        "agent-searchkit-mcp"
+      ],
+      "env": {
+        "SEARXNG_BASE_URL": "http://127.0.0.1:8888"
+      }
+    }
+  }
+}
+```
+
+Global install alternative:
+
+```json
+{
+  "mcpServers": {
+    "agent-searchkit": {
+      "command": "agent-searchkit-mcp",
+      "env": {
+        "SEARXNG_BASE_URL": "http://127.0.0.1:8888"
+      }
+    }
+  }
+}
+```
+
+Windows local checkout fallback:
 
 ```json
 {
@@ -47,25 +92,7 @@ Add to your MCP client config (e.g., `claude_desktop_config.json`, `.cursor/mcp.
 }
 ```
 
-macOS / Linux npm alternative:
-
-```json
-{
-  "mcpServers": {
-    "agent-searchkit": {
-      "command": "npx",
-      "args": ["-y", "agent-searchkit@0.3.18"],
-      "env": {
-        "SEARXNG_BASE_URL": "http://127.0.0.1:8888"
-      }
-    }
-  }
-}
-```
-
 If reusing OpenClaw's local SearXNG, set `SEARXNG_BASE_URL` to `http://127.0.0.1:18080`.
-
-For a local checkout on macOS / Linux, set `command` to `/absolute/path/to/agent-searchkit/bin/agent-searchkit-mcp` after running `npm run build`.
 
 ### 3. Verify
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.19 (2026-05-19)
+
+### Changed
+
+- Clarify the standard MCP JSON config as `npx --package agent-searchkit@latest agent-searchkit-mcp`, with global-install and local-node alternatives for Windows.
+
 ## 0.3.18 (2026-05-19)
 
 ### Changed
