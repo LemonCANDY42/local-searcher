@@ -240,6 +240,77 @@ test("Chinese compact news-like queries strip trailing modifier phrases before S
   }
 });
 
+test("Romanized Chinese names strip English news modifiers before SearXNG", async () => {
+  const calls = [];
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (url) => {
+    calls.push(new URL(String(url)));
+    return {
+      ok: true,
+      json: async () => ({ results: [] }),
+    };
+  };
+
+  try {
+    await __test.searchSearxng(
+      {
+        searxngBaseUrl: "http://127.0.0.1:8888",
+        defaultLanguage: "zh-CN",
+        defaultLimit: 5,
+        defaultMode: "auto",
+        defaultRerankVersion: "v1.4",
+        rerankEnabled: true,
+        fetchTimeoutMs: 1000,
+      },
+      {
+        query: "Zhang Xuefeng recent news activities 2025",
+        category: "general",
+        language: "en-US",
+        limit: 1,
+      },
+    );
+
+    assert.equal(calls[0].searchParams.get("q"), "zhang xuefeng");
+    assert.equal(calls[0].searchParams.get("language"), "en-US");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("Romanized Chinese name searches preserve native order after core extraction", async () => {
+  const ranked = await __test.rankMergedSearchResults(
+    { defaultMode: "general" },
+    {
+      results: [
+        makeResult({
+          title: "Zhang Xuefeng, exam tutor turned influencer, dies at 41",
+          url: "https://www.chinadaily.com.cn/a/202603/24/example.html",
+          originalRank: 1,
+          score: 0.1,
+        }),
+        makeResult({
+          title: "拼音 zhang 的汉字",
+          url: "https://example.com/zhang-pinyin",
+          originalRank: 2,
+          score: 0.99,
+        }),
+      ],
+      unresponsiveEngines: [],
+      suggestions: [],
+    },
+    {
+      query: "Zhang Xuefeng recent news activities 2025",
+      category: "general",
+      mode: "general",
+      limit: 2,
+      rerankVersion: "v1.4",
+    },
+  );
+
+  assert.equal(ranked.effectiveRerankVersion, "v1.0");
+  assert.equal(ranked.finalResults[0].title, "Zhang Xuefeng, exam tutor turned influencer, dies at 41");
+});
+
 test("agent-aware contract can force official-doc and model intent with small structured fields", () => {
   const releaseIntent = __test.detectQueryIntent(
     "OpenClaw latest notes",

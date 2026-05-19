@@ -688,6 +688,23 @@ const CJK_NEWS_MODIFIER_TOKENS = new Set([
   "今日",
   "今天",
 ]);
+const LATIN_NEWS_MODIFIER_TOKENS = new Set([
+  "recent",
+  "news",
+  "activity",
+  "activities",
+  "latest",
+  "update",
+  "updates",
+  "current",
+  "trend",
+  "trends",
+  "move",
+  "moves",
+  "development",
+  "developments",
+  "today",
+]);
 
 function hasCjkText(input: string) {
   return CJK_CHAR_PATTERN.test(input);
@@ -813,9 +830,15 @@ function shouldUseNativeSearxngRankingForCjk(queryOrIntent: string | SearchInten
   return hasCjkText(query);
 }
 
+function shouldUseNativeSearxngRankingForQueryShape(queryOrIntent: string | SearchIntent) {
+  const query = typeof queryOrIntent === "string" ? queryOrIntent : queryOrIntent.normalizedQuery;
+  return hasCjkText(query) || Boolean(latinCoreEntityQuery(query));
+}
+
 function normalizeSearxngQueryForLanguage(query: string, language: string) {
   if (!hasCjkText(query)) {
-    return query.trim();
+    const latinCore = latinCoreEntityQuery(query);
+    return latinCore || query.trim();
   }
   const core = cjkCoreEntityQuery(query);
   if (core) {
@@ -823,6 +846,29 @@ function normalizeSearxngQueryForLanguage(query: string, language: string) {
   }
   const compact = compactCjkWhitespace(query);
   return compact || query.trim();
+}
+
+function latinCoreEntityQuery(input: string) {
+  const parts = normalizeText(input).split(/\s+/g).map((part) => part.trim()).filter(Boolean);
+  if (parts.length < 2) {
+    return "";
+  }
+  const modifierIndex = parts.findIndex((part) =>
+    LATIN_NEWS_MODIFIER_TOKENS.has(part) || /^20\d{2}$/.test(part),
+  );
+  if (modifierIndex <= 0) {
+    return "";
+  }
+  const kept = parts.slice(0, modifierIndex).filter((part) =>
+    /^[a-z][a-z0-9.'-]*$/i.test(part) &&
+    !LOW_SIGNAL_QUERY_TOKENS.has(part) &&
+    !isSourceLikeQueryToken(part),
+  );
+  if (kept.length === 0 || kept.length !== modifierIndex || kept.length > 4) {
+    return "";
+  }
+  const core = kept.join(" ");
+  return core.length >= 3 ? core : "";
 }
 
 function normalizeSearchLanguageForQuery(language: string, query: string) {
@@ -2706,7 +2752,7 @@ async function collectSearchCandidates(
   const baselineCategories = resolveQueryCategories(requestedCategory, intent);
   const perCategoryLimit = Math.max(params.limit * 2, 10);
 
-  if (shouldUseNativeSearxngRankingForCjk(intent) || !isRetrievalFirstRerankVersion(params.rerankVersion)) {
+  if (shouldUseNativeSearxngRankingForQueryShape(intent) || !isRetrievalFirstRerankVersion(params.rerankVersion)) {
     const searxngQuery = normalizeSearxngQueryForLanguage(params.query, params.language);
     const groups = [] as Array<{ category: SearchCategory; raw: any; results: SearchResult[] }>;
     for (const category of baselineCategories) {
@@ -2728,7 +2774,7 @@ async function collectSearchCandidates(
           {
             query: searxngQuery,
             categories: baselineCategories,
-            rationale: searxngQuery === params.query ? ["original-query"] : ["cjk-compact-query", "native-searxng-ranking"],
+            rationale: searxngQuery === params.query ? ["original-query"] : ["core-entity-query", "native-searxng-ranking"],
           },
         ],
       } satisfies RetrievalPlan,
@@ -4939,7 +4985,7 @@ async function rankMergedSearchResults(
   let embeddingInfo: Record<string, unknown> | undefined;
   let adaptiveProfile: AdaptiveHybridProfile | undefined;
 
-  if (shouldUseNativeSearxngRankingForCjk(intent)) {
+  if (shouldUseNativeSearxngRankingForQueryShape(intent)) {
     finalResults = baseline;
   } else if (params.rerankVersion === "v1.1") {
     finalResults = ensureWithinLimit(rerankResultsV11(merged.results, intent, debug), params.limit);
@@ -4991,8 +5037,8 @@ async function rankMergedSearchResults(
     params.rerankVersion === "v1.5" ||
     params.rerankVersion === "v2.0"
   ) && embeddingInfo?.applied === false;
-  const nativeCjkRanking = shouldUseNativeSearxngRankingForCjk(intent);
-  const effectiveRerankVersion = nativeCjkRanking ? "v1.0" : embeddingFallback ? "v1.1" : params.rerankVersion;
+  const nativeSearchRanking = shouldUseNativeSearxngRankingForQueryShape(intent);
+  const effectiveRerankVersion = nativeSearchRanking ? "v1.0" : embeddingFallback ? "v1.1" : params.rerankVersion;
   if (embeddingFallback) {
     finalResults = ensureWithinLimit(rerankResultsV11(merged.results, intent, debug), params.limit);
   }

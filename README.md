@@ -128,7 +128,7 @@ The default service helper starts only SearXNG. Optional helper services such as
       "args": [
         "-y",
         "--package",
-        "agent-searchkit@0.3.27",
+        "agent-searchkit@0.3.28",
         "agent-searchkit-mcp"
       ],
       "env": {

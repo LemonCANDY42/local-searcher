@@ -459,6 +459,23 @@ var CJK_NEWS_MODIFIER_TOKENS = /* @__PURE__ */ new Set([
   "\u4ECA\u65E5",
   "\u4ECA\u5929"
 ]);
+var LATIN_NEWS_MODIFIER_TOKENS = /* @__PURE__ */ new Set([
+  "recent",
+  "news",
+  "activity",
+  "activities",
+  "latest",
+  "update",
+  "updates",
+  "current",
+  "trend",
+  "trends",
+  "move",
+  "moves",
+  "development",
+  "developments",
+  "today"
+]);
 function hasCjkText(input) {
   return CJK_CHAR_PATTERN.test(input);
 }
@@ -558,13 +575,14 @@ function cjkCoreEntityAdjustment(result, intent) {
   }
   return strength > 0 ? Number((0.22 * strength).toFixed(4)) : -0.34;
 }
-function shouldUseNativeSearxngRankingForCjk(queryOrIntent) {
+function shouldUseNativeSearxngRankingForQueryShape(queryOrIntent) {
   const query = typeof queryOrIntent === "string" ? queryOrIntent : queryOrIntent.normalizedQuery;
-  return hasCjkText(query);
+  return hasCjkText(query) || Boolean(latinCoreEntityQuery(query));
 }
 function normalizeSearxngQueryForLanguage(query, language) {
   if (!hasCjkText(query)) {
-    return query.trim();
+    const latinCore = latinCoreEntityQuery(query);
+    return latinCore || query.trim();
   }
   const core = cjkCoreEntityQuery(query);
   if (core) {
@@ -572,6 +590,26 @@ function normalizeSearxngQueryForLanguage(query, language) {
   }
   const compact = compactCjkWhitespace(query);
   return compact || query.trim();
+}
+function latinCoreEntityQuery(input) {
+  const parts = normalizeText(input).split(/\s+/g).map((part) => part.trim()).filter(Boolean);
+  if (parts.length < 2) {
+    return "";
+  }
+  const modifierIndex = parts.findIndex(
+    (part) => LATIN_NEWS_MODIFIER_TOKENS.has(part) || /^20\d{2}$/.test(part)
+  );
+  if (modifierIndex <= 0) {
+    return "";
+  }
+  const kept = parts.slice(0, modifierIndex).filter(
+    (part) => /^[a-z][a-z0-9.'-]*$/i.test(part) && !LOW_SIGNAL_QUERY_TOKENS.has(part) && !isSourceLikeQueryToken(part)
+  );
+  if (kept.length === 0 || kept.length !== modifierIndex || kept.length > 4) {
+    return "";
+  }
+  const core = kept.join(" ");
+  return core.length >= 3 ? core : "";
 }
 function normalizeSearchLanguageForQuery(language, query) {
   if (hasCjkText(query) && (!language || language.toLowerCase() === "en-us")) {
@@ -2063,7 +2101,7 @@ async function collectSearchCandidates(cfg, params) {
   const intent = detectQueryIntent(params.query, requestedMode, requestedCategory, params.agentContract);
   const baselineCategories = resolveQueryCategories(requestedCategory, intent);
   const perCategoryLimit = Math.max(params.limit * 2, 10);
-  if (shouldUseNativeSearxngRankingForCjk(intent) || !isRetrievalFirstRerankVersion(params.rerankVersion)) {
+  if (shouldUseNativeSearxngRankingForQueryShape(intent) || !isRetrievalFirstRerankVersion(params.rerankVersion)) {
     const searxngQuery = normalizeSearxngQueryForLanguage(params.query, params.language);
     const groups2 = [];
     for (const category of baselineCategories) {
@@ -2085,7 +2123,7 @@ async function collectSearchCandidates(cfg, params) {
           {
             query: searxngQuery,
             categories: baselineCategories,
-            rationale: searxngQuery === params.query ? ["original-query"] : ["cjk-compact-query", "native-searxng-ranking"]
+            rationale: searxngQuery === params.query ? ["original-query"] : ["core-entity-query", "native-searxng-ranking"]
           }
         ]
       },
@@ -3561,7 +3599,7 @@ async function rankMergedSearchResults(cfg, merged, params) {
   let finalResults = baseline;
   let embeddingInfo;
   let adaptiveProfile;
-  if (shouldUseNativeSearxngRankingForCjk(intent)) {
+  if (shouldUseNativeSearxngRankingForQueryShape(intent)) {
     finalResults = baseline;
   } else if (params.rerankVersion === "v1.1") {
     finalResults = ensureWithinLimit(rerankResultsV11(merged.results, intent, debug), params.limit);
@@ -3596,8 +3634,8 @@ async function rankMergedSearchResults(cfg, merged, params) {
     adaptiveProfile = v13.profile;
   }
   const embeddingFallback = (params.rerankVersion === "v1.2" || params.rerankVersion === "v1.3" || params.rerankVersion === "v1.4" || params.rerankVersion === "v1.5" || params.rerankVersion === "v2.0") && embeddingInfo?.applied === false;
-  const nativeCjkRanking = shouldUseNativeSearxngRankingForCjk(intent);
-  const effectiveRerankVersion = nativeCjkRanking ? "v1.0" : embeddingFallback ? "v1.1" : params.rerankVersion;
+  const nativeSearchRanking = shouldUseNativeSearxngRankingForQueryShape(intent);
+  const effectiveRerankVersion = nativeSearchRanking ? "v1.0" : embeddingFallback ? "v1.1" : params.rerankVersion;
   if (embeddingFallback) {
     finalResults = ensureWithinLimit(rerankResultsV11(merged.results, intent, debug), params.limit);
   }

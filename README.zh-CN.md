@@ -128,7 +128,7 @@ search:
       "args": [
         "-y",
         "--package",
-        "agent-searchkit@0.3.27",
+        "agent-searchkit@0.3.28",
         "agent-searchkit-mcp"
       ],
       "env": {

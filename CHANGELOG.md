@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.28 (2026-05-19)
+
+### Fixed
+
+- Extract core entities from romanized Chinese-name news queries such as `Zhang Xuefeng recent news activities 2025`, avoiding SearXNG/Bing fallback to single-token `zhang` matches.
+
 ## 0.3.27 (2026-05-19)
 
 ### Changed
