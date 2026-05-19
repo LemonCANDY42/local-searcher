@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.24 (2026-05-19)
+
+### Fixed
+
+- For Chinese news-like multi-keyword queries, send the extracted core entity to SearXNG instead of the full modifier-heavy phrase, avoiding Bing/SearXNG fallback to single-character matches such as `马`.
+
 ## 0.3.23 (2026-05-19)
 
 ### Changed

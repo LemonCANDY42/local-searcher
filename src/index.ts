@@ -702,8 +702,23 @@ function compactCjkWhitespace(input: string) {
 
 function cjkCoreEntityQuery(input: string) {
   const parts = normalizeText(input).split(/\s+/g).map((part) => part.trim()).filter(Boolean);
-  if (parts.length < 2 || !parts.some(hasCjkText)) {
+  if (!parts.some(hasCjkText)) {
     return "";
+  }
+  if (parts.length === 1) {
+    let compact = parts[0];
+    let changed = false;
+    for (let index = 0; index < 4; index += 1) {
+      const token = [...CJK_NEWS_MODIFIER_TOKENS]
+        .sort((a, b) => b.length - a.length)
+        .find((candidate) => compact.endsWith(candidate) && compact.length > candidate.length);
+      if (!token) {
+        break;
+      }
+      compact = compact.slice(0, -token.length);
+      changed = true;
+    }
+    return changed && compact.length >= 2 ? compact : "";
   }
   const kept = parts.filter((part) => !(hasCjkText(part) && CJK_NEWS_MODIFIER_TOKENS.has(part)));
   if (kept.length === parts.length || kept.length === 0) {
@@ -801,6 +816,10 @@ function shouldUseNativeSearxngRankingForCjk(queryOrIntent: string | SearchInten
 function normalizeSearxngQueryForLanguage(query: string, language: string) {
   if (!hasCjkText(query)) {
     return query.trim();
+  }
+  const core = cjkCoreEntityQuery(query);
+  if (core) {
+    return core;
   }
   const compact = compactCjkWhitespace(query);
   return compact || query.trim();
