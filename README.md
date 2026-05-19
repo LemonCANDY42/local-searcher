@@ -1,50 +1,43 @@
-<p align="center">
-  <img src="https://img.shields.io/badge/🔍-agent--searchkit-blueviolet?style=for-the-badge&labelColor=0d1117&color=58a6ff" alt="agent-searchkit">
-</p>
+# agent-searchkit
 
-<h1 align="center">agent-searchkit</h1>
+**Local-first SearXNG search infrastructure for AI agents.**
 
-<p align="center">
-  <strong>为 AI Agent 打造的本地搜索基础设施</strong><br>
-  多引擎聚合 · 7 种 rerank 策略版本 · 数据不出本机
-</p>
+[中文 README](./README.zh-CN.md) | [MCP skill](./skills/mcp.md) | [OpenClaw skill](./skills/openclaw.md) | [Standalone CLI skill](./skills/standalone.md)
 
-<p align="center">
-  <a href="https://github.com/LemonCANDY42/agent-searchkit/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-00d56b?style=flat-square&labelColor=0d1117" alt="License"></a>
-  <a href="https://github.com/LemonCANDY42/agent-searchkit/stargazers"><img src="https://img.shields.io/github/stars/LemonCANDY42/agent-searchkit?style=flat-square&labelColor=0d1117&color=ffd700" alt="Stars"></a>
-  <a href="https://github.com/LemonCANDY42/agent-searchkit/issues"><img src="https://img.shields.io/github/issues/LemonCANDY42/agent-searchkit?style=flat-square&labelColor=0d1117&color=ff6b6b" alt="Issues"></a>
-  <a href="https://github.com/LemonCANDY42/agent-searchkit/network/members"><img src="https://img.shields.io/github/forks/LemonCANDY42/agent-searchkit?style=flat-square&labelColor=0d1117&color=8b949e" alt="Forks"></a>
-</p>
+agent-searchkit gives agents a local SearXNG-backed search stack with normalized results, citations, MCP tools, OpenClaw integration, and optional heuristic reranking. It is intentionally not a final-answer ranker: it returns retrieval candidates, and the calling LLM should do the final semantic filtering and ordering before answering.
 
-<p align="center">
-  <a href="#-quickstart">Quickstart</a> · <a href="#-features">Features</a> · <a href="#-comparison">Comparison</a> · <a href="#-integration">Integration</a> · <a href="#-architecture">Architecture</a>
-</p>
+## Contents
 
----
+- [What It Provides](#what-it-provides)
+- [Prerequisites](#prerequisites)
+- [Quickstart](#quickstart)
+- [MCP Setup](#mcp-setup)
+- [OpenClaw Setup](#openclaw-setup)
+- [CLI Usage](#cli-usage)
+- [Output And Citations](#output-and-citations)
+- [Chinese Search Behavior](#chinese-search-behavior)
+- [Configuration](#configuration)
+- [Troubleshooting](#troubleshooting)
+- [Development](#development)
 
-## ✨ Highlights
+## What It Provides
 
-- 📊 **7 种 Rerank 策略版本** — 从原始排序到实体感知，按场景选择一个有效版本
-- 🌐 **四引擎聚合** — Google + Bing + DuckDuckGo + Qwant 同时搜
-- 🔒 **完全本地** — 查询永不出本机，零遥测，无需 API Key
-- 📎 **引用注释** — 可选输出 `[1] [2] ...` 标准引用格式
-- 🔍 **搜索 + 提取 + 研究** — search / extract / research / status 四个工具
-- 🔌 **即插即用** — 原生支持 OpenClaw / MCP / LangChain / CrewAI
+- Local SearXNG search with JSON output enabled.
+- MCP stdio server: [agent-searchkit MCP skill](./skills/mcp.md).
+- OpenClaw web search provider: [OpenClaw skill](./skills/openclaw.md).
+- Standalone search and research CLIs: [Standalone CLI skill](./skills/standalone.md).
+- Normalized result fields: `title`, `url`, `snippet`, `host`, `publishedDate`, `rank`.
+- Optional citation objects and source lists for Markdown-style references.
+- A clear boundary for final ranking: the tool returns candidates; the LLM performs final selection.
 
----
+## Prerequisites
 
-## 📋 Prerequisites
+- [Docker](https://docs.docker.com/get-docker/) with Docker Compose v2, for local SearXNG.
+- [Node.js](https://nodejs.org/) 18+, for MCP and CLI commands.
 
-- [Docker](https://docs.docker.com/get-docker/) with Docker Compose v2（用于运行 SearXNG 搜索引擎）
-- [Node.js](https://nodejs.org/) 18+（用于 CLI 工具和插件）
+## Quickstart
 
----
-
-## ⚡ Quickstart
-
-### 1️⃣ 启动 SearXNG
-
-`agent-searchkit` 默认连接本机 SearXNG。仓库内置的服务脚本会用 Docker 启动一套本机 SearXNG，并显式开启 MCP 必需的 JSON 搜索输出。仅启动 SearXNG Web UI 不够；`/search?...format=json` 必须可用。
+### 1. Start SearXNG
 
 macOS / Linux:
 
@@ -64,14 +57,16 @@ Copy-Item .env.example .env.local
 .\manage.ps1 up
 ```
 
-Manual verification:
+Verify that both the Web UI and JSON API work:
 
 ```bash
 curl -I http://127.0.0.1:8888/
-curl 'http://127.0.0.1:8888/search?q=openclaw&format=json'
+curl "http://127.0.0.1:8888/search?q=openclaw&format=json"
 ```
 
-The second command must return JSON with fields such as `query` or `results`. If it returns `403 Forbidden`, your SearXNG config has not enabled JSON output. The bundled `services/searxng/settings.yml` includes:
+The second command must return JSON containing fields such as `query` or `results`. A plain `403 Forbidden` usually means JSON output is not enabled in SearXNG.
+
+The bundled service config mounts [services/searxng/settings.yml](./services/searxng/settings.yml) into the container and enables:
 
 ```yaml
 search:
@@ -80,53 +75,21 @@ search:
     - json
 ```
 
-The bundled Docker Compose file mounts this file directly into the container:
+The default helper starts only SearXNG. Optional services such as Valkey and ntfy are behind `up-extras` / `restart-extras`, so normal MCP setup is not blocked by unrelated image pulls.
 
-```yaml
-./searxng/settings.yml:/etc/searxng/settings.yml:rw
-```
+### 2. Configure One Agent Path
 
-That direct file mount prevents SearXNG from silently generating a default `settings.yml` without JSON support. The mount is writable because current SearXNG images may `chown` the file during startup.
+Choose one path:
 
-Do not replace the bundled file with a minimal `use_default_settings: true` config for MCP usage. The SearXNG default engine set includes engines such as `radio browser` that are unrelated to web search and can fail during startup on fresh Docker caches. The bundled settings keep the engine list focused on web/news/package search and avoid noisy engines that commonly fail from local Docker networks or trigger CAPTCHA from container traffic.
+- MCP clients: use [MCP Setup](#mcp-setup).
+- OpenClaw built-in `web_search`: use [OpenClaw Setup](#openclaw-setup).
+- Scripts and local smoke tests: use [CLI Usage](#cli-usage).
 
-The default service bootstrap starts only SearXNG. Optional helper services such as Valkey and ntfy are behind explicit `up-extras` / `restart-extras` commands so the MCP quickstart does not fail because of unrelated image pulls. The scripts intentionally ignore an inherited `COMPOSE_PROFILES=extras` value for the default `up` command.
+## MCP Setup
 
-If you already have SearXNG, for example OpenClaw's local service at `http://127.0.0.1:18080`, you can reuse it as long as its JSON search endpoint passes the same verification command.
+Use this for Claude Desktop, Cursor, LM Studio, Continue, OpenClaw MCP plugin installs, and other MCP-compatible clients.
 
-### 2️⃣ 接入 OpenClaw
-
-OpenClaw 原生集成会把内置 `web_search` 路由到 `agent-searchkit`。这适合希望所有 Agent 默认使用本地 SearXNG + reranking 的用户。
-
-```bash
-# 安装插件。当前包包含可选浏览器提取/本地诊断能力，OpenClaw 会要求显式确认。
-openclaw plugins install clawhub:agent-searchkit --dangerously-force-unsafe-install
-
-# 启用插件，并告诉插件 SearXNG 在哪里。
-openclaw config set plugins.entries.agent-searchkit.enabled true
-openclaw config set plugins.entries.agent-searchkit.config.searxngBaseUrl "http://127.0.0.1:8888"
-
-# 设为内置 web_search 的默认 provider。
-openclaw config set tools.web.search.provider agent-searchkit
-
-# 校验并重启。
-openclaw config validate
-openclaw gateway restart
-```
-
-设置 `tools.web.search.provider` 后，Agent 调用内置 `web_search` 会自动走 SearXNG + reranking。OpenClaw provider 路径返回轻量结构化结果：`title`、`url`、`snippet`、`host`、`publishedDate`、`citation`，并附带 `sources` 参考文献列表。
-
-> Why the scary install flag?
->
-> `agent-searchkit` includes an optional browser extraction fallback and local diagnostics. Those paths use Node's `child_process` API to run the bundled extraction script and inspect Docker container names. OpenClaw 2026.5.12+ blocks plugins with shell/process-spawn capability by default because that pattern can be dangerous in untrusted plugins.
->
-> In this plugin, the process-spawn usage is scoped to local extraction/diagnostics, not arbitrary user-provided shell execution. Normal installation may therefore stop with a "dangerous code patterns" warning. Use `--dangerously-force-unsafe-install` only after reviewing the source and only on a machine where you trust the plugin.
-
-### 3️⃣ 接入 MCP 或其他 Agent
-
-对 MCP 客户端，`agent-searchkit-mcp` 是 stdio MCP server，会调用包内 rerank 搜索逻辑；`SEARXNG_BASE_URL` 指向你的本地 SearXNG。
-
-**标准配置（不需要提前全局安装）：**
+Standard config, no global install required:
 
 ```json
 {
@@ -147,9 +110,35 @@ openclaw gateway restart
 }
 ```
 
-需要完全可复现时，把 `agent-searchkit@latest` 固定为当前版本，例如 `agent-searchkit@0.3.20`。
+For reproducible setup, pin the package version:
 
-**Windows 如果已全局安装成功：**
+```json
+{
+  "mcpServers": {
+    "agent-searchkit": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "--package",
+        "agent-searchkit@0.3.26",
+        "agent-searchkit-mcp"
+      ],
+      "env": {
+        "SEARXNG_BASE_URL": "http://127.0.0.1:8888"
+      }
+    }
+  }
+}
+```
+
+If you installed globally:
+
+```bash
+npm install -g agent-searchkit@latest
+agent-searchkit-mcp --help
+```
+
+Then configure:
 
 ```json
 {
@@ -164,7 +153,7 @@ openclaw gateway restart
 }
 ```
 
-**Windows 兜底配置（本地仓库，避开 npm/npx bin shim）：**
+Windows fallback when GUI-launched clients cannot see npm bin shims:
 
 ```powershell
 git clone https://github.com/LemonCANDY42/agent-searchkit.git
@@ -188,346 +177,224 @@ node .\bin\agent-searchkit-mcp --help
 }
 ```
 
-如果你有自己的 SearXNG，保持 `SEARXNG_BASE_URL` 为它的地址；如果复用 OpenClaw 本地实例，通常改为 `http://127.0.0.1:18080`。
+MCP exposes these tools:
 
-**本地源码开发：**
+| Tool | Purpose |
+|---|---|
+| `web_searchkit_search` | Search SearXNG and return normalized candidates |
+| `web_searchkit_research` | Save a checkpointed research run |
+| `web_searchkit_extract` | Extract readable page content |
+| `web_searchkit_status` | Inspect stack health |
+
+For agent instructions, link to [skills/mcp.md](./skills/mcp.md).
+
+## OpenClaw Setup
+
+Use this when you want OpenClaw's built-in `web_search` to route through agent-searchkit.
+
+```bash
+openclaw plugins install clawhub:agent-searchkit --dangerously-force-unsafe-install
+openclaw config set plugins.entries.agent-searchkit.enabled true
+openclaw config set plugins.entries.agent-searchkit.config.searxngBaseUrl "http://127.0.0.1:8888"
+openclaw config set tools.web.search.provider agent-searchkit
+openclaw config validate
+openclaw gateway restart
+```
+
+Why the install flag exists: the package includes optional page extraction and local diagnostics that use Node process-spawn APIs. Review the source before installing from an untrusted fork.
+
+For OpenClaw-specific usage, link to [skills/openclaw.md](./skills/openclaw.md).
+
+## CLI Usage
+
+Install from npm:
+
+```bash
+npm install -g agent-searchkit@latest
+```
+
+Or run from a checkout:
 
 ```bash
 git clone https://github.com/LemonCANDY42/agent-searchkit.git
 cd agent-searchkit
 npm install
 npm run build
-cd services && cp .env.example .env.local && ./manage.sh up && ./manage.sh test
 ```
+
+Search directly:
+
+```bash
+agent-searchkit-search "Python 3.14 new features"
+agent-searchkit-search -c news -n 5 "AI regulation 2026"
+agent-searchkit-search -l zh-CN "马斯克 最近 动向 新闻"
+agent-searchkit-search --json -n 3 "OpenClaw web_search provider"
+```
+
+Run a checkpointed research pass:
+
+```bash
+agent-searchkit-research "local LLM inference benchmarks 2026"
+```
+
+For CLI details, link to [skills/standalone.md](./skills/standalone.md).
+
+## Output And Citations
+
+`web_searchkit_search` returns normalized retrieval candidates. The output includes:
 
 ```json
 {
-  "mcpServers": {
-    "agent-searchkit": {
-      "command": "/absolute/path/to/agent-searchkit/bin/agent-searchkit-mcp",
-      "env": {
-        "SEARXNG_BASE_URL": "http://127.0.0.1:8888"
-      }
+  "query": "马斯克 最近 动向 新闻",
+  "language": "zh-CN",
+  "rerankVersion": "v1.0",
+  "llmRerankHint": "Treat these as retrieval candidates...",
+  "results": [
+    {
+      "rank": 1,
+      "title": "埃隆·马斯克_百度百科",
+      "url": "https://baike.baidu.com/item/...",
+      "snippet": "...",
+      "host": "baike.baidu.com"
     }
-  }
+  ]
 }
 ```
 
-其他 Agent 框架有两种接入方式：
+Important ranking rule:
 
-- 需要 reranking / citations / MCP 工具协议：接入 `agent-searchkit-mcp`，调用 `web_searchkit_search`。核心输入是 `query`，可选输入包括 `limit`、`language`、`mode`、`rerankVersion`、`citations`。
-- 只想做本地 SearXNG 连通性检查或简单脚本集成：调用 `agent-searchkit-search` CLI。它直接打 SearXNG，不跑 rerank。
+> `rank` is the retrieval candidate order, not the final answer order. The calling LLM should select, group, and reorder candidates using the user intent, `title`, `snippet`, `host`, `publishedDate`, and `citation`.
 
-### 4️⃣ 本地 CLI smoke test
+Enable citations:
 
-这一步用于确认 SearXNG 搜索入口能通，也方便非 OpenClaw Agent 直接拿 JSON 结果。它是直接查询 SearXNG 的轻量 CLI，不等同于 OpenClaw 内置 `web_search` provider 路径；OpenClaw 集成请以上面的 `tools.web.search.provider` 配置为准。
-
-```bash
-./bin/agent-searchkit-search "Python 3.14 new features"
-./bin/agent-searchkit-search -c news -n 5 "AI regulation 2026"
-./bin/agent-searchkit-search -l zh-CN "量子计算 最新突破"
-./bin/agent-searchkit-search --json -n 3 "OpenClaw web_search provider"
+```json
+{
+  "query": "OpenClaw web_search provider",
+  "citations": true
+}
 ```
 
-安装为 npm 包时，会暴露 `agent-searchkit-search`、`agent-searchkit-research` 和 `agent-searchkit-mcp` 三个 bin。
-
----
-
-## 🔍 Comparison
-
-<table>
-<tr>
-  <th></th>
-  <th>agent-searchkit</th>
-  <th>Brave API</th>
-  <th>Google CSE</th>
-  <th>DuckDuckGo</th>
-</tr>
-<tr>
-  <td>💰 <b>费用</b></td>
-  <td>✅ 免费，无限制</td>
-  <td>2K/月后 $3/千次</td>
-  <td>100次/天</td>
-  <td>免费但限速</td>
-</tr>
-<tr>
-  <td>🌐 <b>多引擎聚合</b></td>
-  <td>✅ 4 引擎同时搜</td>
-  <td>仅 Brave</td>
-  <td>仅 Google</td>
-  <td>仅 DDG</td>
-</tr>
-<tr>
-  <td>🔒 <b>数据隐私</b></td>
-  <td>✅ 数据不出本机</td>
-  <td>发送到 Brave</td>
-  <td>发送到 Google</td>
-  <td>有限</td>
-</tr>
-<tr>
-  <td>🔑 <b>API Key</b></td>
-  <td>✅ 不需要</td>
-  <td>❌ 必需</td>
-  <td>❌ 必需</td>
-  <td>✅ 不需要</td>
-</tr>
-<tr>
-  <td>📊 <b>Reranking</b></td>
-  <td>✅ 7 个版本渐进优化</td>
-  <td>❌</td>
-  <td>❌</td>
-  <td>❌</td>
-</tr>
-<tr>
-  <td>📝 <b>研究流水线</b></td>
-  <td>✅ 结果自动保存</td>
-  <td>❌</td>
-  <td>❌</td>
-  <td>❌</td>
-</tr>
-</table>
-
----
-
-## ✨ Features
-
-### 🔍 四大工具
-
-| Tool | 能力 | 说明 |
-|------|------|------|
-| `web_searchkit_search` | SearXNG 搜索 + 多版本 rerank | 核心搜索入口 |
-| `web_searchkit_research` | 搜索并保存结果到本地 | 产出 search.json + report.md |
-| `web_searchkit_extract` | 网页提取 (fetch + Playwright) | 支持 JS 渲染页面 |
-| `web_searchkit_status` | 健康检查 | 栈状态检查 |
-
-### 📊 Rerank 策略版本
-
-从原始排序到实体感知，`agent-searchkit` 内置 7 个互斥的 rerank 策略版本。它们不是一条每次搜索都会完整跑完的多阶段流水线；每次搜索只会选择一个有效版本执行：
-
-- 默认使用 `v1.4`，也就是当前通用推荐策略。
-- OpenClaw provider 使用 `plugins.entries.agent-searchkit.config.defaultRerankVersion`。
-- `web_searchkit_search` / `web_searchkit_research` 可通过 `rerankVersion` 临时覆盖。
-- 如果请求的版本需要本地 embedding 但 embedding provider 不可用，系统会自动降级到无依赖的启发式路径，并在 debug 信息里说明。
-
-```
-v1.0  原始 SearXNG 排序 ─────────────────────── 基线
-v1.1  启发式混合 (词法 + 域名先验) ──────────── 快、无依赖
-v1.2  + 片段嵌入相似度 ───────────────────────── 语义匹配
-v1.3  自适应混合 (查询桶加权) ────────────────── 意图感知
-v1.4  ★ 默认 ── 检索优先 + 自适应 rerank ──── 通用推荐
-v1.5  + 精确拟合优化 (结构化查询) ──────────── 文档/包/API
-v2.0  实体感知 + 页面角色覆盖 ──────────────── 高级研究
-```
-
-### 📈 Benchmark 怎么用这些版本
-
-项目 benchmark 的作用是比较这些互斥版本在同一组查询 case 上的表现，而不是模拟线上一次搜索串行跑完所有版本。
-
-- `scripts/benchmark-search-v14.mjs` 可一次选择多个 `rerankVersion`，分别对同一批 case 评分。
-- `shared-union` candidate mode 会共用候选池，便于隔离比较“排序策略”本身；`live-retrieval` 会让每个版本独立走检索 + rerank。
-- 报告里的 `Versions` 是参与对比的版本集合，`Focus version` / `Live default` 是当前重点观察和线上默认版本。
-- 当前默认版本是 `v1.4`；如果 benchmark 证明新版本更稳，再提升 `defaultRerankVersion`。
-
-### 🎯 搜索模式
-
-```typescript
-mode: "auto" | "general" | "official-docs" | "github" | "models" | "packages"
-```
-
-Agent 只需传 query，模式自动检测。或者手动指定——查文档用 `official-docs`，找 repo 用 `github`，找模型用 `models`。
-
-### 📎 引用注释 (Citations)
-
-搜索时传入 `citations=true`，每条结果附带引用信息：
+Each result then includes:
 
 ```json
 {
   "citation": {
     "ref": "[1]",
-    "formatted": "[1] Page Title. https://example.com/page (accessed 2026-05-15)",
+    "formatted": "[1] Page Title. https://example.com/page (accessed 2026-05-19)",
     "inline": "(example.com, 2026)"
   }
 }
 ```
 
-- `ref` — 编号引用，用于行内标注 `[1]`
-- `formatted` — 完整引用文本，适合参考文献列表
-- `inline` — 简短括号形式，适合行内注明 `(来源, 年份)`
+Recommended LLM answer style:
 
-默认关闭。传入 `citations=true` 开启。
+```markdown
+The current provider path is configured through `tools.web.search.provider` and returns normalized candidates with citation metadata [1].
 
-### LLM final reranking
-
-`rank` 是检索候选顺序，不是最终答案顺序。`agent-searchkit` 负责 SearXNG 召回、归一化、引用和轻量诊断；最终筛选/重排应由调用方 LLM 根据用户意图、`title`、`snippet`、`host`、`publishedDate`、`citation` 来完成。中文/CJK 查询尤其默认保留 SearXNG 候选顺序，不再套本地英文式 token rerank。
-
----
-
-## 🔌 Integration
-
-### OpenClaw（原生插件）
-
-```bash
-openclaw plugins install clawhub:agent-searchkit --dangerously-force-unsafe-install
-openclaw config set tools.web.search.provider agent-searchkit
-openclaw gateway restart
-# Agent 调用 web_search 时自动走 agent-searchkit
+References:
+[1] Page Title. https://example.com/page
 ```
 
-OpenClaw may warn that the plugin contains high-risk code patterns because the optional browser extraction and Docker diagnostics use `node:child_process`. That warning is expected for current releases; install with the force flag only if you trust this source.
+When writing skills or agent prompts, prefer standard Markdown links:
 
-### MCP Server
-
-Standard config without a prior global install:
-
-```json
-{
-  "mcpServers": {
-    "agent-searchkit": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "--package",
-        "agent-searchkit@latest",
-        "agent-searchkit-mcp"
-      ],
-      "env": { "SEARXNG_BASE_URL": "http://127.0.0.1:8888" }
-    }
-  }
-}
+```markdown
+See [Agent Searchkit MCP setup](./skills/mcp.md).
+Use [OpenClaw setup](./skills/openclaw.md) when routing built-in `web_search`.
 ```
 
-For reproducible deployments, pin `agent-searchkit@latest` to a concrete version such as `agent-searchkit@0.3.20`.
+## Chinese Search Behavior
 
-If LM Studio / OpenClaw reports `MCP error -32001: Request timed out` during startup while the SearXNG JSON endpoint is healthy, use `agent-searchkit >= 0.3.20`. Older MCP builds only handled standard `Content-Length` stdio frames; 0.3.20 also accepts JSON-lines initialize frames used by some bridges.
+SearXNG/Bing can degrade Chinese multi-keyword phrases such as `马斯克 最近 动向 新闻` or `马斯克最近动向新闻` into single-character matches like `马`.
 
-If the package is installed globally, this shorter config is also valid:
+agent-searchkit handles CJK queries by:
 
-```json
-{
-  "mcpServers": {
-    "agent-searchkit": {
-      "command": "agent-searchkit-mcp",
-      "env": { "SEARXNG_BASE_URL": "http://127.0.0.1:8888" }
-    }
-  }
-}
+- forcing `zh-CN` when a Chinese query is sent with `en-US`;
+- extracting the core entity for common news-like modifiers, for example `马斯克 最近 动向 新闻` -> `马斯克`;
+- explicitly passing curated engines: `bing,bing news,wikipedia`;
+- preserving SearXNG order for CJK candidates and leaving final semantic reranking to the calling LLM.
+
+This behavior is intentionally conservative. It avoids pretending local token heuristics can understand all Chinese semantics.
+
+## Configuration
+
+| Field | Default | Description |
+|---|---|---|
+| `searxngBaseUrl` | `http://127.0.0.1:8888` | SearXNG base URL |
+| `defaultLanguage` | `zh-CN` | Default search language |
+| `defaultEngines` | `["bing", "bing news", "wikipedia"]` | SearXNG engines passed explicitly |
+| `defaultLimit` | `8` | Results per query |
+| `rerankEnabled` | `true` | Enable heuristic reranking for non-CJK queries |
+| `defaultRerankVersion` | `v1.4` | Default heuristic rerank version |
+| `defaultMode` | `auto` | Default search mode |
+
+Supported `rerankVersion` values:
+
+| Version | Meaning |
+|---|---|
+| `v1.0` | Raw SearXNG candidate order |
+| `v1.1` | Heuristic hybrid |
+| `v1.2` | Heuristic + snippet embedding |
+| `v1.3` | Adaptive hybrid |
+| `v1.4` | Retrieval-first adaptive, default |
+| `v1.5` | Planner-aware retrieval-first |
+| `v2.0` | Baseline-preserving hybrid |
+
+CJK queries may report `v1.0` even when a rerank version is requested, because final semantic ranking should happen in the calling LLM.
+
+## Troubleshooting
+
+### SearXNG returns 403 for JSON
+
+Your SearXNG config probably does not enable JSON output. Use the bundled service setup or make sure your SearXNG settings include:
+
+```yaml
+search:
+  formats:
+    - html
+    - json
 ```
 
-On Windows, if npm/npx bin shims are not visible to the MCP client, use a local checkout and `node D:\\github\\agent-searchkit\\bin\\agent-searchkit-mcp`.
+### MCP bridge times out
 
-### Python / LangChain
+Use `agent-searchkit >= 0.3.20`. The MCP server supports both standard `Content-Length` frames and JSON-lines initialize frames.
 
-```python
-import subprocess, json
-from langchain.tools import Tool
+### Windows npx cannot find the bin
 
-def local_search(query: str, limit: int = 8) -> list[dict]:
-    result = subprocess.run(
-        ["./bin/agent-searchkit-search", "--json", "-n", str(limit), query],
-        capture_output=True, text=True
-    )
-    return json.loads(result.stdout)
+Try the standard `--package` form first:
 
-search_tool = Tool(name="local_search", func=local_search, description="Local web search")
+```powershell
+npx -y --package agent-searchkit@latest agent-searchkit-mcp --help
 ```
 
-### CrewAI
+If GUI-launched MCP clients still cannot find it, use the global install or local `node ...\bin\agent-searchkit-mcp` fallback from [MCP Setup](#mcp-setup).
 
-```python
-from crewai.tools import BaseTool
+### Chinese results still look wrong
 
-class WebSearchTool(BaseTool):
-    name = "web_search"
-    description = "Search the web locally through SearXNG"
+Check what the client sends as the query. For news-like Chinese phrases, agent-searchkit should send the extracted core entity to SearXNG. Run with `debug=true` to inspect `retrieval.queryVariants` and returned candidates.
 
-    def _run(self, query: str) -> str:
-        result = subprocess.run(
-            ["./bin/agent-searchkit-search", "--json", "-n", "8", query],
-            capture_output=True, text=True, timeout=30,
-        )
-        return result.stdout
-```
-
----
-
-## 🏗️ Architecture
-
-```
-  ┌──────────────────────────────────────────────────┐
-  │             AI Agent (任意框架)                    │
-  │   OpenClaw · MCP · CrewAI · LangChain · 自研     │
-  └────────────────────┬─────────────────────────────┘
-                       │
-            ┌──────────▼──────────┐
-            │   agent-searchkit    │
-            │   ┌──────────────┐  │
-            │   │ search       │  │   ← 选择一个 rerank 版本
-            │   │ research     │  │   ← 结果保存到本地
-            │   │ extract      │  │   ← Playwright fallback
-            │   │ status       │  │   ← 健康检查
-            │   └──────────────┘  │
-            └──────────┬──────────┘
-                       │
-            ┌──────────▼──────────┐
-            │      SearXNG        │     ┌──────────┐
-            │   (meta-search)     │────▶│  Google   │
-            │   localhost:8888    │────▶│  Bing     │
-            └──────────┬──────────┘────▶│  DuckDG   │
-                       │                │  Qwant    │
-            ┌──────────▼──────────┐     └──────────┐
-            │ Rerank Strategy     │
-            │ v1.0 / ... / v2.0  │
-            └──────────┬──────────┘
-                       │
-            ┌──────────▼──────────┐
-            │   Research Runs     │
-            │   runs/<timestamp>/ │
-            │   ├─ search.json    │
-            │   └─ report.md      │
-            └─────────────────────┘
-```
-
----
-
-## ⚙️ Configuration
-
-| 字段 | 默认值 | 说明 |
-|------|--------|------|
-| `searxngBaseUrl` | `http://127.0.0.1:8888` | SearXNG 地址 |
-| `defaultLanguage` | `zh-CN` | 默认搜索语言；中文/CJK 查询会自动使用 `zh-CN` 并压缩中文字符间空格 |
-| `defaultEngines` | `["bing", "bing news", "wikipedia"]` | 默认 SearXNG engines，显式传给 SearXNG，避免实例默认引擎漂移 |
-| `defaultLimit` | `8` | 默认返回条数 |
-| `rerankEnabled` | `true` | 启用 reranking |
-| `defaultRerankVersion` | `v1.4` | 默认 rerank 版本 |
-| `defaultMode` | `auto` | 默认搜索模式 |
-
----
-
-## 🤝 Contributing
+## Development
 
 ```bash
 git clone https://github.com/LemonCANDY42/agent-searchkit.git
 cd agent-searchkit
-git checkout -b feat/your-feature
-
 npm install
 npm run build
 npm test
 npm run test:mcp
-npm pack --dry-run
-
-git push origin feat/your-feature
-# 开 PR 🎉
+npm run test:rollout
 ```
 
----
+Before publishing:
 
-## 📄 License
+```bash
+npm run build
+npm test
+npm run test:mcp
+npm run test:rollout
+git diff --check
+npm publish
+```
 
-[MIT](LICENSE)
+## License
 
----
-
-<p align="center">
-  <sub>Built with 🧠 by <a href="https://github.com/LemonCANDY42">Kenny</a> · Powered by <a href="https://docs.searxng.org/">SearXNG</a></sub>
-</p>
+[MIT](./LICENSE)

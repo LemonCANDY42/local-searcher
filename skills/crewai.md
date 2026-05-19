@@ -49,7 +49,7 @@ class WebSearchTool(BaseTool):
             return f"Search failed: {result.stderr}"
         results = json.loads(result.stdout)
         return "\n".join(
-            f"[{i}] {r['title']}\n    {r['url']}\n    {r.get('content', '')}"
+            f"[{i}] [{r['title']}]({r['url']})\n    {r.get('content', '')}"
             for i, r in enumerate(results.get("results", []), 1)
         )
 
@@ -92,3 +92,5 @@ result = crew.kickoff()
 
 - The CLI integration above is a direct SearXNG wrapper; use the MCP server when the agent needs rerank modes, citation metadata, or `rerankVersion` control.
 - For Chinese queries, add `-l zh-CN` to the subprocess command or expose language as a tool argument.
+- Treat search output as retrieval candidates, not final answer order. The CrewAI agent should select and rerank final sources semantically.
+- Prefer Markdown links, for example `[Result title](https://example.com/page)`, so downstream reports carry clickable citations.

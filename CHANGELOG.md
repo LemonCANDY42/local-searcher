@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.26 (2026-05-19)
+
+### Changed
+
+- Rewrite the default README in English, add a full Chinese counterpart, clarify installation paths, and update skills to prefer Markdown links/citations and LLM-side final reranking.
+
 ## 0.3.25 (2026-05-19)
 
 ### Changed

@@ -1,46 +1,23 @@
 # Agent Searchkit — MCP Server Skill
 
-## What this does
+## Purpose
 
-Exposes agent-searchkit as an MCP (Model Context Protocol) server, usable by any MCP-compatible agent (Claude Desktop, Cursor, Continue, etc.).
+Expose agent-searchkit as an MCP stdio server for MCP-compatible clients such as Claude Desktop, Cursor, Continue, LM Studio, and OpenClaw MCP plugin setups.
+
+For the full installation guide, see [README MCP Setup](../README.md#mcp-setup) or [中文 MCP 配置](../README.zh-CN.md#mcp-配置).
 
 ## Prerequisites
 
-- Node.js 18+
-- SearXNG running locally (default: `http://127.0.0.1:8888`)
+- [Node.js 18+](https://nodejs.org/)
+- SearXNG JSON API at `http://127.0.0.1:8888`
+- Verify SearXNG with:
+  ```bash
+  curl "http://127.0.0.1:8888/search?q=openclaw&format=json"
+  ```
 
-## Setup
+## Recommended Config
 
-### 1. Choose an install path
-
-Standard MCP use does not require a prior global install:
-
-```bash
-npx -y --package agent-searchkit@latest agent-searchkit-mcp --help
-```
-
-For reproducible deployments, pin `agent-searchkit@latest` to a concrete version such as `agent-searchkit@0.3.20`.
-
-If npm/npx bin shims are unreliable on Windows, either install globally:
-
-```powershell
-npm install -g agent-searchkit@latest
-agent-searchkit-mcp --help
-```
-
-or use a local checkout:
-
-```powershell
-git clone https://github.com/LemonCANDY42/agent-searchkit.git
-cd agent-searchkit
-npm install
-npm run build
-node .\bin\agent-searchkit-mcp --help
-```
-
-### 2. Configure your MCP client
-
-Add to your MCP client config (e.g., `claude_desktop_config.json`, `.cursor/mcp.json`, or LM Studio's `mcp.json`). Standard config:
+Use the standard `npx --package` form. It does not require global installation:
 
 ```json
 {
@@ -61,7 +38,35 @@ Add to your MCP client config (e.g., `claude_desktop_config.json`, `.cursor/mcp.
 }
 ```
 
-Global install alternative:
+For reproducibility, pin a version:
+
+```json
+{
+  "mcpServers": {
+    "agent-searchkit": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "--package",
+        "agent-searchkit@0.3.26",
+        "agent-searchkit-mcp"
+      ],
+      "env": {
+        "SEARXNG_BASE_URL": "http://127.0.0.1:8888"
+      }
+    }
+  }
+}
+```
+
+## Alternatives
+
+Global install:
+
+```bash
+npm install -g agent-searchkit@latest
+agent-searchkit-mcp --help
+```
 
 ```json
 {
@@ -78,6 +83,14 @@ Global install alternative:
 
 Windows local checkout fallback:
 
+```powershell
+git clone https://github.com/LemonCANDY42/agent-searchkit.git
+cd agent-searchkit
+npm install
+npm run build
+node .\bin\agent-searchkit-mcp --help
+```
+
 ```json
 {
   "mcpServers": {
@@ -92,36 +105,49 @@ Windows local checkout fallback:
 }
 ```
 
-If reusing OpenClaw's local SearXNG, set `SEARXNG_BASE_URL` to `http://127.0.0.1:18080`.
+## Tools
 
-### 3. Verify
+| Tool | Purpose |
+|---|---|
+| `web_searchkit_search` | Search SearXNG and return normalized retrieval candidates |
+| `web_searchkit_research` | Save a checkpointed research run |
+| `web_searchkit_extract` | Extract readable page content |
+| `web_searchkit_status` | Check local stack health |
 
-Restart your MCP client. The following tools should appear:
+## Output Contract
 
-| Tool | Description |
-|------|-------------|
-| `web_searchkit_search` | Search with rerank strategy versions and optional citations |
+Treat returned results as retrieval candidates, not final answer order. The calling LLM should perform final semantic filtering and reranking.
 
-## Environment variables
+When `citations=true`, each result includes a citation object:
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `SEARXNG_BASE_URL` | `http://127.0.0.1:8888` | SearXNG URL |
-| `DEFAULT_LANGUAGE` | `en-US` | Search language |
-| `DEFAULT_LIMIT` | `8` | Results per query |
-
-## Usage examples
-
-Once configured, your agent can call:
-
+```json
+{
+  "citation": {
+    "ref": "[1]",
+    "formatted": "[1] Page Title. https://example.com/page (accessed 2026-05-19)",
+    "inline": "(example.com, 2026)"
+  }
+}
 ```
-web_searchkit_search(query="TypeScript 5.5 new features", mode="official-docs")
-web_searchkit_search(query="Redis vs Valkey benchmark", category="it")
+
+Recommended final answer format:
+
+```markdown
+Short answer with claims grounded in selected sources [1].
+
+References:
+[1] Page Title. https://example.com/page
+```
+
+Prefer standard Markdown links in tool output and skills:
+
+```markdown
+See [Agent Searchkit MCP setup](../README.md#mcp-setup).
 ```
 
 ## Troubleshooting
 
-- **No tools appear:** Check the path in your MCP config is correct
-- **SearXNG errors:** Ensure SearXNG is running: `curl http://127.0.0.1:8888/search?q=test&format=json`
-- **Bridge startup timeout:** Use `agent-searchkit >= 0.3.20`; it supports both standard `Content-Length` MCP stdio frames and JSON-lines initialize frames used by some bridges.
-- **Timeout:** Increase `fetchTimeoutMs` in the tool call parameters
+- No MCP tools appear: check the command path and restart the MCP client.
+- JSON search returns 403: SearXNG has not enabled `search.formats: [json]`.
+- Bridge startup timeout: use `agent-searchkit >= 0.3.20`.
+- Chinese results look wrong: use `agent-searchkit >= 0.3.24`; CJK news-like queries extract the core entity before calling SearXNG.

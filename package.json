@@ -1,6 +1,6 @@
 {
   "name": "agent-searchkit",
-  "version": "0.3.25",
+  "version": "0.3.26",
   "description": "Local-first SearXNG search + reranking + research pipelines for AI agents. Framework-agnostic.",
   "type": "module",
   "license": "MIT",
@@ -36,7 +36,8 @@
     "src/",
     "CHANGELOG.md",
     "LICENSE",
-    "README.md"
+    "README.md",
+    "README.zh-CN.md"
   ],
   "openclaw": {
     "extensions": [

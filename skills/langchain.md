@@ -66,7 +66,8 @@ search_tool = Tool(
     description=(
         "Search the web locally through SearXNG. "
         "Input: search query string. "
-        "Returns: normalized JSON with query, resultCount, unresponsiveEngines, and results."
+        "Returns retrieval candidates; the LLM should select and rerank final sources. "
+        "Prefer Markdown links like [title](url) when citing results."
     ),
 )
 
@@ -124,3 +125,11 @@ result = agent.invoke({"messages": [("user", "Find the latest Python 3.14 releas
 |-----------|------|---------|-------------|
 | query | str | required | Research query |
 | limit | int | 12 | Max results per sub-query |
+
+## Output guidance
+
+Treat search output as retrieval candidates, not final answer order. For final answers, choose the most relevant candidates and cite them with standard Markdown links:
+
+```markdown
+The current behavior is documented in [agent-searchkit README](../README.md#output-and-citations).
+```

@@ -10,7 +10,7 @@ function printHelp() {
     'Options:',
     '  -n, --limit <number>        max results to print (default: 8)',
     '  -c, --category <category>   optional SearXNG category',
-    '  -l, --language <language>   language code (default: en-US)',
+    '  -l, --language <language>   language code (default: zh-CN)',
     '  --json                      print normalized JSON instead of pretty text',
     '  --safe-search <0|1|2>       0=off 1=moderate 2=strict (default: 1)',
     '  --base-url <url>            SearXNG search endpoint (default: http://127.0.0.1:8888/search)',
@@ -30,7 +30,7 @@ function parseArgs(argv) {
   const out = {
     limit: 8,
     category: undefined,
-    language: 'en-US',
+    language: 'zh-CN',
     json: false,
     safeSearch: 1,
     baseUrl: 'http://127.0.0.1:8888/search',

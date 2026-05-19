@@ -17,7 +17,7 @@ function printHelp() {
     'Options:',
     '  -c, --category <category>   SearXNG category (default: general)',
     '  -n, --limit <number>        max results to save (default: 8)',
-    '  -l, --language <language>   language code (default: en-US)',
+    '  -l, --language <language>   language code (default: zh-CN)',
     '  --note <text>               optional note stored in report metadata',
     '  -h, --help                  show this help message and exit',
   ].join('\n'));
@@ -33,7 +33,7 @@ function parseArgs(argv) {
   const out = {
     category: 'general',
     limit: 8,
-    language: 'en-US',
+    language: 'zh-CN',
     note: '',
     queryParts: [],
   };
