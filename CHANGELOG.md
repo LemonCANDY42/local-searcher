@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.33 (2026-05-19)
+
+### Changed
+
+- Enable the full bundled SearXNG engine set by default, including Google, DuckDuckGo, Bing, Wikipedia/Wikidata, multiple news engines, and package/source engines.
+
 ## 0.3.32 (2026-05-19)
 
 ### Changed

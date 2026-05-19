@@ -199,7 +199,7 @@ test("Chinese SearXNG requests prefer core entity queries and force zh-CN langua
     assert.equal(result.rerankVersion, "v1.4");
     assert.equal(calls[0].searchParams.get("q"), "马斯克");
     assert.equal(calls[0].searchParams.get("language"), "zh-CN");
-    assert.equal(calls[0].searchParams.get("engines"), "bing,bing news,wikipedia");
+    assert.equal(calls[0].searchParams.get("engines"), "google,duckduckgo,bing,wikipedia,wikidata,google news,duckduckgo news,bing news,qwant news,yahoo news,mojeek news,github,pypi,docker hub,npm");
   } finally {
     globalThis.fetch = originalFetch;
   }

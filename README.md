@@ -128,7 +128,7 @@ The default service helper starts only SearXNG. Optional helper services such as
       "args": [
         "-y",
         "--package",
-        "agent-searchkit@0.3.32",
+        "agent-searchkit@0.3.33",
         "agent-searchkit-mcp"
       ],
       "env": {
@@ -309,7 +309,7 @@ Likely romanized Chinese personal names are specialized by joining surname and g
 |---|---|---|
 | `searxngBaseUrl` | `http://127.0.0.1:8888` | SearXNG base URL |
 | `defaultLanguage` | `zh-CN` | Default search language |
-| `defaultEngines` | `["bing", "bing news", "wikipedia"]` | SearXNG engines passed explicitly |
+| `defaultEngines` | `["google", "duckduckgo", "bing", "wikipedia", "wikidata", "google news", "duckduckgo news", "bing news", "qwant news", "yahoo news", "mojeek news", "github", "pypi", "docker hub", "npm"]` | SearXNG engines passed explicitly |
 | `defaultLimit` | `8` | Results per query |
 | `rerankEnabled` | `true` | Enable heuristic reranking |
 | `defaultRerankVersion` | `v1.4` | Default heuristic rerank version |

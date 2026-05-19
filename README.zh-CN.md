@@ -128,7 +128,7 @@ search:
       "args": [
         "-y",
         "--package",
-        "agent-searchkit@0.3.32",
+        "agent-searchkit@0.3.33",
         "agent-searchkit-mcp"
       ],
       "env": {
@@ -309,7 +309,7 @@ MCP 调用会在运行时强制执行这个约束：明显非英文的 query 或
 |---|---|---|
 | `searxngBaseUrl` | `http://127.0.0.1:8888` | SearXNG 地址 |
 | `defaultLanguage` | `zh-CN` | 默认搜索语言 |
-| `defaultEngines` | `["bing", "bing news", "wikipedia"]` | 显式传给 SearXNG 的 engines |
+| `defaultEngines` | `["google", "duckduckgo", "bing", "wikipedia", "wikidata", "google news", "duckduckgo news", "bing news", "qwant news", "yahoo news", "mojeek news", "github", "pypi", "docker hub", "npm"]` | 显式传给 SearXNG 的 engines |
 | `defaultLimit` | `8` | 每次查询结果数 |
 | `rerankEnabled` | `true` | 启用启发式 rerank |
 | `defaultRerankVersion` | `v1.4` | 默认启发式 rerank 版本 |
