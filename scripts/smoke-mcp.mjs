@@ -80,3 +80,34 @@ assert.equal(init.result.serverInfo.version, packageJson.version);
 const tools = responses.find((item) => item.id === 2).result.tools;
 assert.ok(tools.some((tool) => tool.name === 'web_searchkit_search'));
 console.log('MCP smoke test passed');
+
+const lineChild = spawn(process.execPath, [serverPath], { stdio: ['pipe', 'pipe', 'pipe'] });
+let lineStdout = '';
+let lineStderr = '';
+lineChild.stdout.setEncoding('utf8');
+lineChild.stderr.setEncoding('utf8');
+lineChild.stdout.on('data', (chunk) => { lineStdout += chunk; });
+lineChild.stderr.on('data', (chunk) => { lineStderr += chunk; });
+lineChild.stdin.write(`${JSON.stringify({
+  jsonrpc: '2.0',
+  id: 11,
+  method: 'initialize',
+  params: { protocolVersion: '2024-11-05', capabilities: {}, clientInfo: { name: 'line-smoke', version: '0.0.0' } }
+})}\n`);
+
+await new Promise((resolve, reject) => {
+  const timeout = setTimeout(() => reject(new Error(`timed out waiting for JSON-line MCP response. stderr=${lineStderr} stdout=${lineStdout}`)), 3000);
+  const interval = setInterval(() => {
+    if (lineStdout.includes('"id":11')) {
+      clearInterval(interval);
+      clearTimeout(timeout);
+      resolve();
+    }
+  }, 25);
+});
+
+lineChild.kill();
+const lineResponse = JSON.parse(lineStdout.trim().split(/\r?\n/).find((line) => line.includes('"id":11')));
+assert.equal(lineResponse.result.serverInfo.name, 'agent-searchkit');
+assert.equal(lineResponse.result.serverInfo.version, packageJson.version);
+console.log('MCP JSON-lines smoke test passed');

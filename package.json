@@ -1,6 +1,6 @@
 {
   "name": "agent-searchkit",
-  "version": "0.3.19",
+  "version": "0.3.20",
   "description": "Local-first SearXNG search + reranking + research pipelines for AI agents. Framework-agnostic.",
   "type": "module",
   "license": "MIT",

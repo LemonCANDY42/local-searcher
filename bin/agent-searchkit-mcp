@@ -51,6 +51,10 @@ async function runSearch(args) {
 
 function writeMessage(message) {
   const body = JSON.stringify(message);
+  if (outputMode === 'json-lines') {
+    process.stdout.write(`${body}\n`);
+    return;
+  }
   process.stdout.write(`Content-Length: ${Buffer.byteLength(body, 'utf8')}\r\n\r\n${body}`);
 }
 
@@ -118,7 +122,36 @@ async function handle(message) {
   }
 }
 
-function readContentLengthFrame() {
+function readMessage() {
+  while (inputBuffer.length > 0 && /\s/.test(String.fromCharCode(inputBuffer[0]))) {
+    inputBuffer = inputBuffer.slice(1);
+  }
+  if (inputBuffer.length === 0) return null;
+
+  if (!inputBuffer.toString('utf8', 0, Math.min(inputBuffer.length, 32)).toLowerCase().startsWith('content-length:')) {
+    const newline = inputBuffer.indexOf('\n');
+    if (newline >= 0) {
+      const line = inputBuffer.slice(0, newline).toString('utf8').trim();
+      inputBuffer = inputBuffer.slice(newline + 1);
+      if (!line) return null;
+      outputMode = 'json-lines';
+      return JSON.parse(line);
+    }
+
+    const raw = inputBuffer.toString('utf8').trim();
+    if (raw.startsWith('{') && raw.endsWith('}')) {
+      try {
+        const parsed = JSON.parse(raw);
+        inputBuffer = Buffer.alloc(0);
+        outputMode = 'json-lines';
+        return parsed;
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  }
+
   const crlfHeaderEnd = inputBuffer.indexOf('\r\n\r\n');
   const lfHeaderEnd = inputBuffer.indexOf('\n\n');
   const headerEnd = crlfHeaderEnd >= 0 ? crlfHeaderEnd : lfHeaderEnd;
@@ -132,6 +165,7 @@ function readContentLengthFrame() {
   if (inputBuffer.length < bodyEnd) return null;
   const body = inputBuffer.slice(bodyStart, bodyEnd).toString('utf8');
   inputBuffer = inputBuffer.slice(bodyEnd);
+  outputMode = 'content-length';
   return JSON.parse(body);
 }
 
@@ -141,11 +175,12 @@ if (process.argv.includes('--help') || process.argv.includes('-h')) {
 }
 
 let inputBuffer = Buffer.alloc(0);
+let outputMode = 'content-length';
 process.stdin.on('data', (chunk) => {
   inputBuffer = Buffer.concat([inputBuffer, chunk]);
   try {
     let message;
-    while ((message = readContentLengthFrame()) !== null) {
+    while ((message = readMessage()) !== null) {
       void handle(message);
     }
   } catch (error) {
