@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.16 (2026-05-19)
+
+### Fixed
+
+- Remove DuckDuckGo-backed engines from the default SearXNG quickstart profile because containerized local traffic can trigger CAPTCHA and produce scary startup/search logs.
+
 ## 0.3.15 (2026-05-19)
 
 ### Fixed

@@ -56,23 +56,10 @@ engines:
     display_type: ["infobox"]
     categories: [general]
 
-  - name: duckduckgo
-    engine: duckduckgo
-    shortcut: ddg
-    categories: [general]
-    weight: 1
-
   - name: bing
     engine: bing
     shortcut: bi
     categories: [general]
-    weight: 1
-
-  - name: duckduckgo news
-    engine: duckduckgo_extra
-    categories: [news]
-    ddg_category: news
-    shortcut: ddn
     weight: 1
 
   - name: bing news
@@ -80,18 +67,6 @@ engines:
     categories: [news]
     shortcut: bin
     weight: 1
-
-  - name: duckduckgo images
-    engine: duckduckgo_extra
-    categories: [images]
-    ddg_category: images
-    shortcut: ddi
-
-  - name: duckduckgo videos
-    engine: duckduckgo_extra
-    categories: [videos]
-    ddg_category: videos
-    shortcut: ddv
 
   - name: github
     engine: github
